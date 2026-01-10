@@ -1,6 +1,6 @@
 # TSE-X Mobile App Changelog
 
-## [1.5.0] - 2026-01-10
+## [0.9.0] - 2026-01-10 (Beta)
 
 ### Added
 - **Power Switch Device Type**: New UI for time-based power control
@@ -24,7 +24,7 @@
 
 ---
 
-## [1.4.0] - 2026-01-08
+## [0.8.0] - 2026-01-08
 
 ### Added
 - Payload Preview Widget with copy/download features
@@ -39,7 +39,7 @@
 
 ---
 
-## [1.3.0] - 2026-01-05
+## [0.7.0] - 2026-01-05
 
 ### Added
 - USDC payment support (Base blockchain)
@@ -51,7 +51,7 @@
 
 ---
 
-## [1.2.0] - 2025-12-28
+## [0.6.0] - 2025-12-28
 
 ### Added
 - Resume Session widget for reconnecting to active sessions
@@ -64,7 +64,7 @@
 
 ---
 
-## [1.1.0] - 2025-12-20
+## [0.5.0] - 2025-12-20
 
 ### Added
 - Real TSE payment flow via Phantom wallet
@@ -73,10 +73,10 @@
 
 ---
 
-## [1.0.0] - 2025-12-15
+## [0.1.0] - 2025-12-15
 
 ### Added
-- Initial release
+- Initial beta release
 - Device scanning (NFC, QR, BLE)
 - Device Dashboard for Coffee Machine and Bike Lock
 - Mock payment flow for testing

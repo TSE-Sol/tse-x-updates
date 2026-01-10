@@ -12,15 +12,15 @@ This repository tracks updates to:
 
 | Component | Version | Updated |
 |-----------|---------|---------|
-| Mobile App | 1.5.0 | 2026-01-10 |
-| Backend API | 2.3.0 | 2026-01-10 |
+| Mobile App | 0.9.0 | 2026-01-10 |
+| Backend API | 0.9.0 | 2026-01-10 |
 | Arduino Library | 1.0.0 | 2026-01-10 |
 
 ## Quick Links
 
-- 🔧 [Arduino Library](https://github.com/YOUR_USERNAME/tse-x-arduino-library) - Public library for device firmware
+- 🔧 [Arduino Library](https://github.com/TSE-Sol/tse-x-arduino-library) - Public library for device firmware
 - 📖 [API Documentation](docs/API.md) - Backend API reference
-- 🐛 [Report Issues](https://github.com/YOUR_USERNAME/tse-x-updates/issues)
+- 🐛 [Report Issues](https://github.com/TSE-Sol/tse-x-updates/issues)
 
 ---
 
@@ -28,7 +28,7 @@ This repository tracks updates to:
 
 ### [Mobile App Changelog](CHANGELOG_APP.md)
 ### [Backend Changelog](CHANGELOG_BACKEND.md)
-### [Arduino Library Changelog](https://github.com/YOUR_USERNAME/tse-x-arduino-library/blob/main/CHANGELOG.md)
+### [Arduino Library Changelog](https://github.com/TSE-Sol/tse-x-arduino-library/blob/main/CHANGELOG.md)
 
 ---
 
@@ -48,6 +48,6 @@ Watch this repository to get notified of updates:
 
 ## Support
 
-- 📧 Email: support@tse-x.app
-- 💬 Discord: [TSE-X Community](https://discord.gg/tse-x)
-- 🐦 Twitter: [@TSE_X_App](https://twitter.com/tse_x_app)
+- 📧 Email: thesocialexperimentsol@gmail.com
+- 💬 Discord: [TSE-X Community](https://discord.gg/X9cTmzW2Gz)
+- 🐦 Twitter/X: [@T_S_E_Sol](https://x.com/T_S_E_Sol)

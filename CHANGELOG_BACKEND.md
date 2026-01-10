@@ -1,6 +1,6 @@
 # TSE-X Backend Changelog
 
-## [2.3.0] - 2026-01-10
+## [0.9.0] - 2026-01-10 (Beta)
 
 ### Added
 - `brewing` and `brewType` fields at top level of status response (for easier Arduino parsing)
@@ -14,7 +14,7 @@
 
 ---
 
-## [2.2.0] - 2026-01-08
+## [0.8.0] - 2026-01-08
 
 ### Added
 - Device secret validation on poll endpoints
@@ -26,7 +26,7 @@
 
 ---
 
-## [2.1.0] - 2026-01-05
+## [0.7.0] - 2026-01-05
 
 ### Added
 - USDC payment verification (Base blockchain)
@@ -39,7 +39,7 @@
 
 ---
 
-## [2.0.0] - 2025-12-28
+## [0.6.0] - 2025-12-28
 
 ### Added
 - X.402 protocol implementation
@@ -53,7 +53,7 @@
 
 ---
 
-## [1.0.0] - 2025-12-15
+## [0.1.0] - 2025-12-15
 
 ### Added
 - Initial backend release
