@@ -1,5 +1,29 @@
 # TSE-X Backend Changelog
 
+## [1.0.0] - 2026-01-30
+
+### Added
+- **x402scan Integration** - Full compatibility with x402scan.com payment aggregator
+- **Custom Facilitator** - Server submits signed payment authorizations on behalf of users
+  - Base: EIP-3009 `transferWithAuthorization` for USDC payments
+  - Solana: Versioned transaction support with feePayer signature
+- **Ownership Proofs** - Cryptographic signatures proving control of payment addresses
+  - Added to `/.well-known/x402` discovery endpoint
+  - Added to all 402 Payment Required responses
+- **Solana USDC** - Added as payment option alongside Base USDC and Solana TSE
+- **feePayer field** - Solana accepts now include feePayer for x402scan compatibility
+
+### Changed
+- Payment-Required header now includes `ownershipProofs` array
+- `buildAcceptsArray()` returns both Solana and Base payment options
+- Versioned transactions (v0) supported for Solana payments
+
+### Environment Variables
+- `X402_SERVER_PRIVATE_KEY` - Base wallet for submitting EIP-3009 transfers
+- `SOLANA_SUBMITTER_PRIVATE_KEY` - Solana wallet for paying fees and submitting SPL transfers
+
+---
+
 ## [0.9.0] - 2026-01-10 (Beta)
 
 ### Added
@@ -94,4 +118,10 @@ POST /x402/:deviceId/stop    # Cancel early
 ```
 POST /x402/:deviceId/ble-connect
 Body: { bleDeviceId, wallet }
+```
+
+### x402 Discovery
+```
+GET /.well-known/x402
+Returns: Server info, payment options, ownership proofs
 ```
