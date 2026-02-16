@@ -4,6 +4,34 @@ All notable changes to the TSE-X mobile application.
 
 ---
 
+## [1.2.1] - 2026-02-15
+
+### Added
+- **Firebase Authentication** — Email/password, Google, and Apple sign-in fully integrated
+- **Profile Page** — View and edit display name, email, profile avatar, referral code, and connected wallets
+- **Avatar System** — 12 custom crypto-themed preset avatars hosted on GitHub Pages
+- **Avatar Picker** — Bottom sheet with grid selection, saves to Firestore and persists across sessions
+- **Referral System** — Auto-generated unique referral codes (TSE + 6 alphanumeric chars) on sign-up
+- **Referral Tracking** — referralCode, referralCount, and referredBy fields stored in Firestore
+- **Profile Image Upload** — Camera/gallery upload option with Firebase Storage integration
+- **Copy to Clipboard** — One-tap copy for referral codes and wallet addresses
+- **Save Profile Changes** — Updates display name and photo to Firestore with confirmation snack bar
+- **Account Deletion** — Confirm dialog → delete Firebase auth user → navigate to sign-on (Apple App Store compliant)
+- **Sign Out** — Clears wallet connections and navigates to sign-on with replacement
+
+### Fixed
+- **Auth Flow Security** — App no longer allows sign-in without an existing account
+- **Sign-In Validation** — Conditional check on User ID before navigation, with error snack bar on failure
+- **Google Sign-In (iOS)** — Added REVERSED_CLIENT_ID URL scheme to Info.plist for proper redirect
+- **Google Sign-In Persistence** — Created automation script to restore GoogleService-Info.plist after FlutterFlow re-downloads
+
+### Changed
+- Social login (Google/Apple) on Log In tab uses Auth Log In instead of Auth Create Account
+- Referral code generation added to both Create Account and Log In flows as safety net
+- Wallet state variables cleared on sign out and account deletion
+
+---
+
 ## [1.2.0] - 2026-02-07
 
 ### Added
@@ -93,4 +121,4 @@ All notable changes to the TSE-X mobile application.
 - 🌐 [TSE-X Updates](https://github.com/TSE-Sol/tse-x-updates)
 - 📊 [Live Stats](https://tse-sol.github.io/tse-assets/stats.html)
 - 💬 [Discord](https://discord.gg/X9cTmzW2Gz)
-- 🐦 [Twitter/X](https://x.com/T_S_E_Sol)
+- 🦅 [Twitter/X](https://x.com/T_S_E_Sol)
