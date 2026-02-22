@@ -4,6 +4,36 @@ All notable changes to the TSE-X mobile application.
 
 ---
 
+## [1.2.2] - 2026-02-21
+
+### Added
+- **Referral Code Input** — Enter a referral code during sign-up on the Create Account tab
+- **Referral Validation** — Prevents self-referral, duplicate use, and invalid codes with colored snack bars
+- **Referral Logs** — Permanent `referralLogs` Firestore collection prevents manipulation across account deletions
+- **Email Verification** — New users must verify email before accessing the app (prevents fake referral abuse)
+- **Verify Email Page** — Dedicated page with resend button, real-time verification check, and spam folder reminder
+- **Forgot Password** — Reset password via email from the Log In tab with validation
+- **Custom SMTP** — Password reset and verification emails sent from branded Gmail (no more spam folder)
+- **Google Sheets Registry** — Automated user tracking with sign-up date, referral data, and active/deleted status
+- **Cloud Functions** — Firestore triggers for user created, updated, and deleted events sync to Google Sheets
+- **Live Profile Data** — Referral count streams in real-time from Firestore instead of cached auth data
+- **Welcome Greeting** — Personalized "Welcome back, [Name]" on the Device Entry page
+- **Account Deletion Cleanup** — Deleting account removes Firestore document and updates registry to "Deleted"
+
+### Fixed
+- **Display Name Save** — Profile save button was writing blank values; now correctly reads from text field
+- **Navigation After Sign-Up** — Expired Firestore security rules blocked referral writes, killing the action flow
+- **Referral Count Not Updating** — Firestore rules only allowed users to read/write their own document; updated to allow authenticated reads/writes for referral queries
+- **Firestore Rules Expiration** — Updated security rules with no expiration date
+
+### Changed
+- Sign-up flow now routes through Email Verification page before wallet connection
+- Referral code saved as `pendingReferralCode` during sign-up, applied after email verification
+- Profile page referral count uses Firestore stream query instead of cached Authenticated User data
+- Delete account action flow deletes Firestore document before Firebase Auth user
+
+---
+
 ## [1.2.1] - 2026-02-15
 
 ### Added

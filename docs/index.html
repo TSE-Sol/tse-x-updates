@@ -52,7 +52,7 @@
     .timeline { position: relative; }
     .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--teal-dim), var(--border) 80%, transparent); border-radius: 2px; }
     .release { position: relative; padding-left: 2.5rem; margin-bottom: 2.5rem; opacity: 0; animation: fadeSlideIn 0.4s ease forwards; }
-    .release:nth-child(1) { animation-delay: 0.05s; } .release:nth-child(2) { animation-delay: 0.1s; } .release:nth-child(3) { animation-delay: 0.15s; } .release:nth-child(4) { animation-delay: 0.2s; } .release:nth-child(5) { animation-delay: 0.25s; } .release:nth-child(6) { animation-delay: 0.3s; } .release:nth-child(7) { animation-delay: 0.35s; } .release:nth-child(8) { animation-delay: 0.4s; } .release:nth-child(9) { animation-delay: 0.45s; }
+    .release:nth-child(1) { animation-delay: 0.05s; } .release:nth-child(2) { animation-delay: 0.1s; } .release:nth-child(3) { animation-delay: 0.15s; } .release:nth-child(4) { animation-delay: 0.2s; } .release:nth-child(5) { animation-delay: 0.25s; } .release:nth-child(6) { animation-delay: 0.3s; } .release:nth-child(7) { animation-delay: 0.35s; } .release:nth-child(8) { animation-delay: 0.4s; } .release:nth-child(9) { animation-delay: 0.45s; } .release:nth-child(10) { animation-delay: 0.5s; } .release:nth-child(11) { animation-delay: 0.55s; }
     @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     .release-dot { position: absolute; left: 0; top: 0.35rem; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--bg-deep); }
     .release-dot.app { background: var(--teal); box-shadow: 0 0 8px var(--teal-glow); }
@@ -95,13 +95,13 @@
     <div class="versions">
       <div class="version-card">
         <div class="version-label">Mobile App</div>
-        <div class="version-number">1.2.1</div>
-        <div class="version-date">Feb 15, 2026</div>
+        <div class="version-number">1.2.2</div>
+        <div class="version-date">Feb 21, 2026</div>
       </div>
       <div class="version-card">
         <div class="version-label">Backend API</div>
-        <div class="version-number">1.1.0</div>
-        <div class="version-date">Feb 7, 2026</div>
+        <div class="version-number">1.1.1</div>
+        <div class="version-date">Feb 21, 2026</div>
       </div>
       <div class="version-card">
         <div class="version-label">Arduino Library</div>
@@ -117,6 +117,62 @@
       <button class="filter-btn" onclick="filterReleases('payment')">💳 Payments</button>
     </div>
     <div class="timeline" id="timeline">
+
+      <!-- APP 1.2.2 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.2</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Feb 21, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Referral Code Input</strong> — Enter a referral code during sign-up on the Create Account tab</div>
+            <div class="change-item"><strong>Referral Validation</strong> — Prevents self-referral, duplicate use, and invalid codes</div>
+            <div class="change-item"><strong>Email Verification</strong> — New users must verify email before accessing the app</div>
+            <div class="change-item"><strong>Verify Email Page</strong> — Dedicated page with resend button and real-time verification check</div>
+            <div class="change-item"><strong>Forgot Password</strong> — Reset password via email from the Log In tab</div>
+            <div class="change-item"><strong>Custom SMTP</strong> — Emails sent from branded Gmail instead of Firebase default</div>
+            <div class="change-item"><strong>User Registry</strong> — Google Sheets auto-tracking via Cloud Functions (create, update, delete)</div>
+            <div class="change-item"><strong>Live Profile Data</strong> — Referral count streams in real-time from Firestore</div>
+            <div class="change-item"><strong>Welcome Greeting</strong> — Personalized "Welcome back" message on home screen</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Display Name Save</strong> — Was writing blank values; now reads from text field correctly</div>
+            <div class="change-item"><strong>Navigation After Sign-Up</strong> — Expired Firestore rules blocked referral writes</div>
+            <div class="change-item"><strong>Referral Count</strong> — Security rules prevented cross-user reads for referral queries</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Sign-up flow routes through Email Verification before wallet connection</div>
+            <div class="change-item">Delete account now removes Firestore document before auth user</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.1.1 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.1.1</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Feb 21, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Payment Flow Hanging</strong> — Transaction submit no longer blocks waiting for Solana confirmation (5-30+ sec)</div>
+            <div class="change-item"><strong>Non-blocking Confirmation</strong> — Returns immediately after submit; confirmation runs in background (fire-and-forget)</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Solana verification retries increased from 3→5 with 3s delay for better reliability</div>
+          </div>
+        </div>
+      </div>
 
       <!-- APP 1.2.1 -->
       <div class="release" data-category="app">
@@ -326,21 +382,11 @@
     </div>
     <div class="footer">
       <p>Built by <a href="https://github.com/TSE-Sol" target="_blank">TSE-Sol</a> · Pay anything, anywhere, with crypto.</p>
-      <p style="margin-top:0.4rem;">📧 <a href="mailto:thesocialexperimentsol@gmail.com">thesocialexperimentsol@gmail.com</a></p>
+      <p style="margin-top:0.4rem;">📧 <a href="/cdn-cgi/l/email-protection#2e5a464b5d414d474f424b565e4b5c47434b405a5d41426e49434f4742004d4143"><span class="__cf_email__" data-cfemail="186c707d6b777b7179747d60687d6a71757d766c6b7774587f75797174367b7775">[email&#160;protected]</span></a></p>
     </div>
   </div>
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     function filterReleases(category) {
       document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
-      document.querySelectorAll('.release').forEach(el => {
-        if (category === 'all' || el.dataset.category === category) {
-          el.classList.remove('hidden');
-        } else {
-          el.classList.add('hidden');
-        }
-      });
-    }
-  </script>
-</body>
-</html>
+      document.querySelectorAll
