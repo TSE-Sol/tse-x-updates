@@ -4,6 +4,26 @@ All notable changes to the TSE-X mobile application.
 
 ---
 
+## [1.2.3] - 2026-03-14
+
+### Added
+- **Weekly Prize Draw** — Automatic Saturday draw with winner announced via push notification
+- **Live Prize Pool Widget** — Displays current pot value with stored winner amount from Firestore (unaffected by pot refills)
+- **Device Photo Upload** — Operators can upload photos for their listed devices
+- **Privacy Policy** — Published at https://tse-sol.github.io/tse-x-updates/privacy-policy.html
+
+### Fixed
+- **Google Sign-In (Android)** — Silent failure resolved by adding Play App Signing SHA-1 and SHA-256 fingerprints to Firebase (Play re-signs APKs with its own certificate; local keystore fingerprints alone are insufficient)
+- **Android Deep Link Handling** — GoRouter was intercepting `tsex://` callbacks before Phantom could respond; fixed via `MainActivity.kt` interception that clears intent before Flutter sees it
+- **Android BLE Scanning** — Removed UUID filter that was preventing device discovery; now uses name-prefix filtering (`X402`, `TSE-`, `TSE_`, `tse-`) for reliable detection
+- **Wallet Session Corruption** — `phantomSignTransaction` now validates 32-byte key lengths on each call; corrupted sessions force a clean disconnect with "Please reconnect" prompt instead of hanging
+- **Navigation Crash** — GoRouter double-slash crash on ResumeSession and CodeCreator pages fixed via `Navigator.push()` replacing `pushNamed`
+
+### Changed
+- Build system fully automated via restore script — handles all patches, signing config, key.properties, google-services.json, GoogleService-Info.plist, and version code in a single run
+
+---
+
 ## [1.2.2] - 2026-02-21
 
 ### Added

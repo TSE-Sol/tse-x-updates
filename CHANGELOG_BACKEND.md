@@ -1,17 +1,61 @@
 # TSE-X Backend Changelog
 
+## [1.1.2] - 2026-03-14
+
+### Added
+- **Prize Draw System** — Automatic weekly draw every Saturday midnight UTC via `prizedraw.js`
+- **Winner Logging** — Winners recorded to Google Sheets with wallet, amount, and timestamp
+- **Public Winners Ledger** — Separate "Public Winners" tab with ARRAYFORMULA auto-pull, published via Google Sheets publish-to-web
+- **Catch-up Draw** — On server startup, detects and runs any overdue weekly draws
+- **Manual Draw Endpoint** — `POST /api/prize-draw/draw` for admin-triggered draws
+- **Stored Winner Amount** — `/pot` endpoint returns `winnerAmount` from Firestore so pot refills don't affect displayed prize
+- **Prize Pool Firestore Sync** — Winner amount written to Firestore on each draw for app widget consumption
+
+### Changed
+- `/pot` endpoint now returns stored `winnerAmount` field from Firestore instead of calculating from live balance
+
+---
+
+## [1.1.1] - 2026-02-21
+
+### Added
+- **Firebase Cloud Functions** — Sync user data (create, update, delete) to Google Sheets via Firestore triggers
+- **User Registry Sheet** — Tracks sign-up date, referral data, email, display name, and deleted status
+
+---
+
+## [1.1.0] - 2026-02-07
+
+### Added
+- **Public Stats API** — `/api/stats`, `/api/transactions`, `/api/leaderboard` endpoints
+- **Transaction Logging** — All payments logged with chain, token, amount, and wallet
+- **Stats Widget** — Embeddable HTML widget for live payment stats
+
+---
+
+## [1.0.1] - 2026-02-07
+
+### Fixed
+- **Payment Flow Hanging** — Transaction submit no longer blocks waiting for Solana confirmation (5-30+ sec)
+- **Non-blocking Confirmation** — Returns immediately after submit; confirmation runs in background via `process.nextTick`
+
+### Changed
+- Solana verification retries increased from 3→5 with 3s delay for better reliability
+
+---
+
 ## [1.0.0] - 2026-01-30
 
 ### Added
-- **x402scan Integration** - Full compatibility with x402scan.com payment aggregator
-- **Custom Facilitator** - Server submits signed payment authorizations on behalf of users
+- **x402scan Integration** — Full compatibility with x402scan.com payment aggregator
+- **Custom Facilitator** — Server submits signed payment authorizations on behalf of users
   - Base: EIP-3009 `transferWithAuthorization` for USDC payments
   - Solana: Versioned transaction support with feePayer signature
-- **Ownership Proofs** - Cryptographic signatures proving control of payment addresses
+- **Ownership Proofs** — Cryptographic signatures proving control of payment addresses
   - Added to `/.well-known/x402` discovery endpoint
   - Added to all 402 Payment Required responses
-- **Solana USDC** - Added as payment option alongside Base USDC and Solana TSE
-- **feePayer field** - Solana accepts now include feePayer for x402scan compatibility
+- **Solana USDC** — Added as payment option alongside Base USDC and Solana TSE
+- **feePayer field** — Solana accepts now include feePayer for x402scan compatibility
 
 ### Changed
 - Payment-Required header now includes `ownershipProofs` array
@@ -19,8 +63,8 @@
 - Versioned transactions (v0) supported for Solana payments
 
 ### Environment Variables
-- `X402_SERVER_PRIVATE_KEY` - Base wallet for submitting EIP-3009 transfers
-- `SOLANA_SUBMITTER_PRIVATE_KEY` - Solana wallet for paying fees and submitting SPL transfers
+- `X402_SERVER_PRIVATE_KEY` — Base wallet for submitting EIP-3009 transfers
+- `SOLANA_SUBMITTER_PRIVATE_KEY` — Solana wallet for paying fees and submitting SPL transfers
 
 ---
 
@@ -124,4 +168,10 @@ Body: { bleDeviceId, wallet }
 ```
 GET /.well-known/x402
 Returns: Server info, payment options, ownership proofs
+```
+
+### Prize Draw
+```
+POST /api/prize-draw/draw    # Manual draw trigger
+GET  /api/prize-draw/pot     # Current pot + stored winner amount
 ```

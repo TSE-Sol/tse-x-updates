@@ -52,7 +52,7 @@
     .timeline { position: relative; }
     .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--teal-dim), var(--border) 80%, transparent); border-radius: 2px; }
     .release { position: relative; padding-left: 2.5rem; margin-bottom: 2.5rem; opacity: 0; animation: fadeSlideIn 0.4s ease forwards; }
-    .release:nth-child(1) { animation-delay: 0.05s; } .release:nth-child(2) { animation-delay: 0.1s; } .release:nth-child(3) { animation-delay: 0.15s; } .release:nth-child(4) { animation-delay: 0.2s; } .release:nth-child(5) { animation-delay: 0.25s; } .release:nth-child(6) { animation-delay: 0.3s; } .release:nth-child(7) { animation-delay: 0.35s; } .release:nth-child(8) { animation-delay: 0.4s; } .release:nth-child(9) { animation-delay: 0.45s; } .release:nth-child(10) { animation-delay: 0.5s; } .release:nth-child(11) { animation-delay: 0.55s; }
+    .release:nth-child(1) { animation-delay: 0.05s; } .release:nth-child(2) { animation-delay: 0.1s; } .release:nth-child(3) { animation-delay: 0.15s; } .release:nth-child(4) { animation-delay: 0.2s; } .release:nth-child(5) { animation-delay: 0.25s; } .release:nth-child(6) { animation-delay: 0.3s; } .release:nth-child(7) { animation-delay: 0.35s; } .release:nth-child(8) { animation-delay: 0.4s; } .release:nth-child(9) { animation-delay: 0.45s; } .release:nth-child(10) { animation-delay: 0.5s; } .release:nth-child(11) { animation-delay: 0.55s; } .release:nth-child(12) { animation-delay: 0.6s; } .release:nth-child(13) { animation-delay: 0.65s; }
     @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     .release-dot { position: absolute; left: 0; top: 0.35rem; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--bg-deep); }
     .release-dot.app { background: var(--teal); box-shadow: 0 0 8px var(--teal-glow); }
@@ -95,13 +95,13 @@
     <div class="versions">
       <div class="version-card">
         <div class="version-label">Mobile App</div>
-        <div class="version-number">1.2.2</div>
-        <div class="version-date">Feb 21, 2026</div>
+        <div class="version-number">1.2.3</div>
+        <div class="version-date">Mar 14, 2026</div>
       </div>
       <div class="version-card">
         <div class="version-label">Backend API</div>
-        <div class="version-number">1.1.1</div>
-        <div class="version-date">Feb 21, 2026</div>
+        <div class="version-number">1.1.2</div>
+        <div class="version-date">Mar 14, 2026</div>
       </div>
       <div class="version-card">
         <div class="version-label">Arduino Library</div>
@@ -117,6 +117,62 @@
       <button class="filter-btn" onclick="filterReleases('payment')">💳 Payments</button>
     </div>
     <div class="timeline" id="timeline">
+
+      <!-- APP 1.2.3 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.3</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Mar 14, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Weekly Prize Draw</strong> — Automatic Saturday draw with winner announced via push notification</div>
+            <div class="change-item"><strong>Live Prize Pool Widget</strong> — Displays current pot value with stored winner amount from Firestore (unaffected by pot refills)</div>
+            <div class="change-item"><strong>Device Photo Upload</strong> — Operators can upload photos for their listed devices</div>
+            <div class="change-item"><strong>Privacy Policy</strong> — Published at tse-sol.github.io/tse-x-updates/privacy-policy.html</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Google Sign-In (Android)</strong> — Silent failure resolved by adding Play App Signing SHA fingerprints to Firebase</div>
+            <div class="change-item"><strong>Android Deep Link Handling</strong> — GoRouter was intercepting tsex:// callbacks; fixed via MainActivity interception</div>
+            <div class="change-item"><strong>Android BLE Scanning</strong> — Removed UUID filter; now uses name-prefix filtering for reliable device discovery</div>
+            <div class="change-item"><strong>Wallet Session Corruption</strong> — Detects corrupted Phantom session keys and forces clean disconnect instead of hanging</div>
+            <div class="change-item"><strong>Navigation Crash</strong> — GoRouter double-slash crash on ResumeSession and CodeCreator pages resolved</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Build system fully automated via restore script — handles all patches, signing, and platform configs in a single run</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.1.2 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.1.2</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Mar 14, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Prize Draw System</strong> — Automatic weekly draw every Saturday midnight UTC</div>
+            <div class="change-item"><strong>Winner Logging</strong> — Winners recorded to Google Sheets with wallet, amount, and timestamp</div>
+            <div class="change-item"><strong>Public Winners Ledger</strong> — Separate tab auto-published via Google Sheets publish-to-web</div>
+            <div class="change-item"><strong>Catch-up Draw</strong> — Server detects and runs any overdue weekly draws on startup</div>
+            <div class="change-item"><strong>Manual Draw Endpoint</strong> — POST /api/prize-draw/draw for admin-triggered draws</div>
+            <div class="change-item"><strong>Stored Winner Amount</strong> — /pot endpoint returns winnerAmount from Firestore so pot refills don't affect displayed prize</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">/pot endpoint now returns stored winnerAmount from Firestore instead of calculating from live balance</div>
+          </div>
+        </div>
+      </div>
 
       <!-- APP 1.2.2 -->
       <div class="release" data-category="app">
@@ -379,14 +435,27 @@
       <a href="https://x.com/T_S_E_Sol" class="quick-link" target="_blank">
         <span class="icon">🐦</span> Twitter / X <span class="arrow">→</span>
       </a>
+      <a href="https://tse-sol.github.io/tse-x-updates/privacy-policy.html" class="quick-link" target="_blank">
+        <span class="icon">🔒</span> Privacy Policy <span class="arrow">→</span>
+      </a>
     </div>
     <div class="footer">
       <p>Built by <a href="https://github.com/TSE-Sol" target="_blank">TSE-Sol</a> · Pay anything, anywhere, with crypto.</p>
-      <p style="margin-top:0.4rem;">📧 <a href="/cdn-cgi/l/email-protection#2e5a464b5d414d474f424b565e4b5c47434b405a5d41426e49434f4742004d4143"><span class="__cf_email__" data-cfemail="186c707d6b777b7179747d60687d6a71757d766c6b7774587f75797174367b7775">[email&#160;protected]</span></a></p>
+      <p style="margin-top:0.4rem;">📧 <a href="mailto:thesocialexperimentsol@gmail.com">thesocialexperimentsol@gmail.com</a></p>
     </div>
   </div>
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     function filterReleases(category) {
       document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
-      document.querySelectorAll
+      document.querySelectorAll('.release').forEach(release => {
+        if (category === 'all' || release.dataset.category === category) {
+          release.classList.remove('hidden');
+        } else {
+          release.classList.add('hidden');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

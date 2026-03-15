@@ -12,14 +12,15 @@ This repository tracks updates to:
 
 | Component | Version | Updated |
 |-----------|---------|---------|
-| Mobile App | 1.2.1 | 2026-02-15 |
-| Backend API | 1.1.0 | 2026-02-07 |
+| Mobile App | 1.2.3 | 2026-03-14 |
+| Backend API | 1.1.2 | 2026-03-14 |
 | Arduino Library | 1.4.0 | 2026-01-30 |
 
 ## Quick Links
 
-- 🔧 [Arduino Library](https://github.com/TSE-Sol/tse-x-arduino-library) - Public library for device firmware
-- 📖 [API Documentation](docs/API.md) - Backend API reference
+- 🔧 [Arduino Library](https://github.com/TSE-Sol/tse-x-arduino-library) — Public library for device firmware
+- 📖 [API Documentation](docs/API.md) — Backend API reference
+- 🔒 [Privacy Policy](https://tse-sol.github.io/tse-x-updates/privacy-policy.html)
 - 🐛 [Report Issues](https://github.com/TSE-Sol/tse-x-updates/issues)
 
 ---
