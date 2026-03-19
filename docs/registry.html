@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TSE-X Device Registry</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root {
   --bg:#0a0e17;--card:#111827;--card2:#1a2235;--border:#1e293b;
@@ -30,16 +31,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .auth-alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
 .auth-alert.show{display:block;}
 .auth-error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);}
-.auth-success{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--green);}
+.auth-success-msg{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--green);}
 .forgot-btn{font-size:12px;color:var(--teal);cursor:pointer;text-align:right;display:block;margin-top:-8px;margin-bottom:14px;background:none;border:none;font-family:'Outfit',sans-serif;width:100%;}
 .forgot-btn:hover{text-decoration:underline;}
 .auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text-muted);font-size:12px;}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 
-/* SHARED INPUTS */
+/* SHARED */
 label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:5px;}
 input,select,textarea{width:100%;background:#0d1421;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;}
-input:focus,select:focus,textarea:focus{border-color:var(--teal-dim);}
+input:focus,select:focus{border-color:var(--teal-dim);}
 select option{background:#111827;}
 .form-group{margin-bottom:14px;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -83,11 +84,14 @@ header h1{font-size:17px;font-weight:600;}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;}
 .card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;}
 .card-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin:20px 0 12px;}
 .alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;}
 .alert.show{display:block;}
 .alert-success{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--green);}
 .alert-error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);}
 .alert-info{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);color:var(--blue);}
+
+/* SECRET BOX */
 .secret-box{background:#0d1421;border:1px solid rgba(20,184,166,.3);border-radius:10px;padding:20px;margin-top:16px;}
 .secret-box h3{font-size:14px;font-weight:600;color:var(--teal);margin-bottom:4px;}
 .secret-box p{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
@@ -95,6 +99,22 @@ header h1{font-size:17px;font-weight:600;}
 .copy-btn{font-size:11px;color:var(--teal);background:none;border:none;cursor:pointer;white-space:nowrap;font-family:'Outfit',sans-serif;}
 .copy-btn:hover{text-decoration:underline;}
 .arduino-code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;margin-top:8px;white-space:pre;overflow-x:auto;color:var(--purple);}
+
+/* QR CODE */
+.qr-box{background:#0d1421;border:1px solid rgba(20,184,166,.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center;}
+.qr-box h3{font-size:14px;font-weight:600;color:var(--teal);margin-bottom:4px;}
+.qr-box p{font-size:12px;color:var(--text-muted);margin-bottom:16px;}
+#qr-canvas{display:inline-block;background:#fff;padding:12px;border-radius:8px;margin-bottom:16px;}
+#qr-canvas canvas, #qr-canvas img{display:block;}
+.qr-json{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:left;color:var(--text-muted);white-space:pre;overflow-x:auto;margin-bottom:12px;}
+.qr-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+/* LOOKUP QR */
+.lookup-qr-box{background:#0d1421;border:1px solid rgba(20,184,166,.2);border-radius:10px;padding:20px;margin-top:16px;text-align:center;display:none;}
+.lookup-qr-box.show{display:block;}
+#lkp-qr-canvas{display:inline-block;background:#fff;padding:10px;border-radius:6px;margin-bottom:12px;}
+
+/* PRICE ITEMS */
 .price-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;}
 .price-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
 .price-item-num{font-size:11px;font-weight:600;color:var(--teal);background:var(--teal-glow);border:1px solid rgba(20,184,166,.2);padding:2px 8px;border-radius:100px;}
@@ -117,7 +137,7 @@ header h1{font-size:17px;font-weight:600;}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:14px;}
-@media(max-width:600px){.form-row{grid-template-columns:1fr;}.price-grid{grid-template-columns:1fr 1fr;}.user-email{display:none;}}
+@media(max-width:600px){.form-row{grid-template-columns:1fr;}.price-grid{grid-template-columns:1fr 1fr;}.user-email{display:none;}.qr-actions{flex-direction:column;}}
 </style>
 </head>
 <body>
@@ -136,7 +156,7 @@ header h1{font-size:17px;font-weight:600;}
       <button class="auth-tab" onclick="setAuthTab('signup',this)">Sign Up</button>
     </div>
     <div class="auth-alert auth-error" id="auth-err"></div>
-    <div class="auth-alert auth-success" id="auth-ok"></div>
+    <div class="auth-alert auth-success-msg" id="auth-ok"></div>
     <div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="you@example.com"></div>
     <div class="form-group"><label>Password</label><input type="password" id="auth-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()"></div>
     <button class="forgot-btn" id="forgot-btn" onclick="forgotPassword()">Forgot password?</button>
@@ -167,6 +187,7 @@ header h1{font-size:17px;font-weight:600;}
     <button class="tab active" onclick="switchTab('register',this)">Register Device</button>
     <button class="tab" onclick="switchTab('prices',this)">Manage Prices</button>
     <button class="tab" onclick="switchTab('lookup',this)">Lookup Device</button>
+    <button class="tab" onclick="switchTab('delete',this)">Delete Device</button>
   </div>
 
   <!-- REGISTER -->
@@ -175,7 +196,9 @@ header h1{font-size:17px;font-weight:600;}
       <div class="card-title">Register a New Device</div>
       <div class="card-sub">Register your IoT device on the TSE-X network to accept crypto payments.</div>
       <div class="alert" id="reg-alert"></div>
-      <div class="form-group"><label>Device ID *</label><input type="text" id="reg-deviceId" placeholder="e.g. TSE-COFFEE-001"><div class="form-hint">Must start with TSE- or X402-</div></div>
+
+      <div class="section-label">Device Info</div>
+      <div class="form-group"><label>Device ID *</label><input type="text" id="reg-deviceId" placeholder="e.g. TSE-COFFEE-001 or X402-BIKE-001"><div class="form-hint">Must start with TSE- or X402-</div></div>
       <div class="form-row">
         <div class="form-group"><label>Device Name *</label><input type="text" id="reg-deviceName" placeholder="e.g. My Coffee Maker"></div>
         <div class="form-group"><label>Device Type *</label>
@@ -191,7 +214,18 @@ header h1{font-size:17px;font-weight:600;}
           </select>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group"><label>Model</label><input type="text" id="reg-model" placeholder="e.g. X402-CM Elite (optional)"></div>
+        <div class="form-group"><label>Firmware Version</label><input type="text" id="reg-firmware" placeholder="e.g. 1.0.0 (optional)"></div>
+      </div>
+
+      <div class="section-label">Payment Wallets</div>
+      <div class="form-hint" style="margin-bottom:12px">Payments will be sent to these wallets. At least one is required.</div>
+      <div class="form-group"><label>Solana Wallet Address</label><input type="text" id="reg-solanaWallet" placeholder="Solana wallet for TSE and USDC (Solana) payments"><div class="form-hint">Required to accept TSE and USDC on Solana</div></div>
+      <div class="form-group"><label>Base Wallet Address</label><input type="text" id="reg-baseWallet" placeholder="0x... Base wallet for USDC (Base) payments"><div class="form-hint">Required to accept USDC on Base</div></div>
+
       <button class="app-btn app-btn-primary" onclick="registerDevice()" id="reg-btn">Register Device</button>
+
       <div class="secret-box" id="reg-result" style="display:none">
         <h3>✅ Device Registered!</h3>
         <p>Save your Device Secret — you cannot retrieve it later.</p>
@@ -200,7 +234,20 @@ header h1{font-size:17px;font-weight:600;}
         <div class="form-hint" style="margin-bottom:6px">Arduino Code</div>
         <div class="arduino-code" id="res-arduino"></div>
       </div>
+
+      <!-- QR CODE -->
+      <div class="qr-box" id="reg-qr-box" style="display:none">
+        <h3>Device QR Code</h3>
+        <p>Print or display this QR code on your device. Users scan it with the TSE-X app to connect and pay.</p>
+        <div id="qr-canvas"></div>
+        <div class="qr-json" id="qr-json-preview"></div>
+        <div class="qr-actions">
+          <button class="app-btn app-btn-primary" onclick="downloadQR()">Download QR Code</button>
+          <button class="app-btn app-btn-outline" onclick="copyQRJson()">Copy JSON</button>
+        </div>
+      </div>
     </div>
+
     <div class="card" id="reg-prices-card" style="display:none">
       <div class="card-title">Set Prices (Optional)</div>
       <div class="card-sub">Add pricing options now or later in Manage Prices. Minimum $0.01 per item.</div>
@@ -239,7 +286,7 @@ header h1{font-size:17px;font-weight:600;}
   <div class="panel" id="panel-lookup">
     <div class="card">
       <div class="card-title">Look Up Device</div>
-      <div class="card-sub">View any registered device and its pricing.</div>
+      <div class="card-sub">View any registered device, its pricing, and regenerate its QR code.</div>
       <div style="display:flex;gap:10px;margin-bottom:16px">
         <input type="text" id="lkp-deviceId" placeholder="Enter Device ID e.g. TSE-COFFEE-001" style="flex:1" onkeydown="if(event.key==='Enter')lookupDevice()">
         <button class="app-btn app-btn-primary" onclick="lookupDevice()">Look Up</button>
@@ -253,9 +300,36 @@ header h1{font-size:17px;font-weight:600;}
         <div class="form-hint" id="lkp-id" style="margin-bottom:16px"></div>
         <div id="lkp-prices-list"></div>
       </div>
+
+      <!-- LOOKUP QR -->
+      <div class="lookup-qr-box" id="lkp-qr-box">
+        <h3 style="font-size:14px;font-weight:600;color:var(--teal);margin-bottom:4px;">Device QR Code</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Scan with TSE-X app to connect to this device.</p>
+        <div id="lkp-qr-canvas"></div>
+        <div class="qr-actions" style="margin-top:12px">
+          <button class="app-btn app-btn-primary" onclick="downloadLkpQR()">Download QR Code</button>
+        </div>
+        <div style="margin-top:12px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-muted);">
+          Note: QR code uses saved wallet addresses. If wallets were not set at registration, update them via your Arduino or contact support.
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+  <!-- DELETE DEVICE -->
+  <div class="panel" id="panel-delete">
+    <div class="card">
+      <div class="card-title">Delete Device</div>
+      <div class="card-sub">Permanently removes the device from the TSE-X network. This cannot be undone.</div>
+      <div class="alert alert-error show" style="margin-bottom:20px">⚠️ Warning: Deleting a device is permanent. The Device ID will become available for re-registration. Any connected hardware using the old secret will stop working.</div>
+      <div class="alert" id="del-alert"></div>
+      <div class="form-group"><label>Device ID *</label><input type="text" id="del-deviceId" placeholder="e.g. TSE-COFFEE-001"></div>
+      <div class="form-group"><label>Device Secret *</label><input type="password" id="del-secret" placeholder="Your 16-char secret key"><div class="form-hint">The secret you received when you registered this device</div></div>
+      <div class="form-group"><label>Confirm Device ID *</label><input type="text" id="del-confirm" placeholder="Type the Device ID again to confirm"><div class="form-hint">Must match exactly to prevent accidental deletion</div></div>
+      <button class="app-btn app-btn-danger" style="margin-top:8px;padding:11px 20px;font-size:14px" onclick="deleteDevice()" id="del-btn">Permanently Delete Device</button>
+    </div>
+  </div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -283,7 +357,6 @@ onAuthStateChanged(auth, u => {
     document.getElementById('app-screen').style.display = 'none';
   }
 });
-
 window._a = { auth, gp, ap, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, signOut };
 </script>
 
@@ -291,8 +364,11 @@ window._a = { auth, gp, ap, signInWithEmailAndPassword, createUserWithEmailAndPa
 const API = 'https://tse-x-backend.onrender.com';
 let authMode = 'login';
 let regDeviceId = '', regDeviceSecret = '';
+let currentQRData = null;
+let currentLkpQRData = null;
 const pc = { reg:0, mgr:0 };
 
+// AUTH
 function setAuthTab(mode, el) {
   authMode = mode;
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
@@ -301,52 +377,101 @@ function setAuthTab(mode, el) {
   document.getElementById('forgot-btn').style.display = mode === 'login' ? 'block' : 'none';
   hideAuthAlerts();
 }
-function hideAuthAlerts() { document.getElementById('auth-err').className='auth-alert auth-error'; document.getElementById('auth-ok').className='auth-alert auth-success'; }
+function hideAuthAlerts() { document.getElementById('auth-err').className='auth-alert auth-error'; document.getElementById('auth-ok').className='auth-alert auth-success-msg'; }
 function showAuthErr(m) { const e=document.getElementById('auth-err'); e.className='auth-alert auth-error show'; e.textContent=m; }
-function showAuthOk(m) { const e=document.getElementById('auth-ok'); e.className='auth-alert auth-success show'; e.textContent=m; }
-
-const errMap = { 'auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password.','auth/email-already-in-use':'An account with this email already exists.','auth/invalid-email':'Please enter a valid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/popup-closed-by-user':'Sign-in popup was closed.','auth/invalid-credential':'Invalid email or password.' };
+function showAuthOk(m) { const e=document.getElementById('auth-ok'); e.className='auth-alert auth-success-msg show'; e.textContent=m; }
+const errMap = {'auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password.','auth/email-already-in-use':'An account with this email already exists.','auth/invalid-email':'Please enter a valid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/popup-closed-by-user':'Sign-in popup was closed.','auth/invalid-credential':'Invalid email or password.'};
 
 async function authSubmit() {
-  const email = document.getElementById('auth-email').value.trim();
-  const pw = document.getElementById('auth-pw').value;
+  const email=document.getElementById('auth-email').value.trim();
+  const pw=document.getElementById('auth-pw').value;
   hideAuthAlerts();
-  if (!email || !pw) return showAuthErr('Please enter your email and password.');
-  const btn = document.getElementById('auth-btn');
-  btn.disabled = true; btn.textContent = '...';
+  if(!email||!pw) return showAuthErr('Please enter your email and password.');
+  const btn=document.getElementById('auth-btn'); btn.disabled=true; btn.textContent='...';
   try {
-    const a = window._a;
-    if (authMode === 'login') await a.signInWithEmailAndPassword(a.auth, email, pw);
-    else await a.createUserWithEmailAndPassword(a.auth, email, pw);
-  } catch(e) { showAuthErr(errMap[e.code] || 'Sign-in failed. Please try again.'); }
-  finally { btn.disabled=false; btn.textContent = authMode==='login'?'Log In':'Create Account'; }
+    const a=window._a;
+    if(authMode==='login') await a.signInWithEmailAndPassword(a.auth,email,pw);
+    else await a.createUserWithEmailAndPassword(a.auth,email,pw);
+  } catch(e){ showAuthErr(errMap[e.code]||'Sign-in failed. Please try again.'); }
+  finally { btn.disabled=false; btn.textContent=authMode==='login'?'Log In':'Create Account'; }
 }
-async function signInGoogle() { hideAuthAlerts(); try { await window._a.signInWithPopup(window._a.auth, window._a.gp); } catch(e) { showAuthErr(errMap[e.code]||e.message); } }
-async function signInApple() { hideAuthAlerts(); try { await window._a.signInWithPopup(window._a.auth, window._a.ap); } catch(e) { showAuthErr(errMap[e.code]||e.message); } }
-async function forgotPassword() {
-  const email = document.getElementById('auth-email').value.trim();
-  hideAuthAlerts();
-  if (!email) return showAuthErr('Enter your email address first.');
-  try { await window._a.sendPasswordResetEmail(window._a.auth, email); showAuthOk('Password reset email sent. Check your inbox.'); }
-  catch(e) { showAuthErr(errMap[e.code]||e.message); }
+async function signInGoogle(){ hideAuthAlerts(); try{ await window._a.signInWithPopup(window._a.auth,window._a.gp); }catch(e){ showAuthErr(errMap[e.code]||e.message); } }
+async function signInApple(){ hideAuthAlerts(); try{ await window._a.signInWithPopup(window._a.auth,window._a.ap); }catch(e){ showAuthErr(errMap[e.code]||e.message); } }
+async function forgotPassword(){
+  const email=document.getElementById('auth-email').value.trim(); hideAuthAlerts();
+  if(!email) return showAuthErr('Enter your email address first.');
+  try{ await window._a.sendPasswordResetEmail(window._a.auth,email); showAuthOk('Password reset email sent. Check your inbox.'); }
+  catch(e){ showAuthErr(errMap[e.code]||e.message); }
 }
-function doSignOut() { window._a.signOut(window._a.auth); }
+function doSignOut(){ window._a.signOut(window._a.auth); }
 
-function switchTab(tab, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+// NAVIGATION
+function switchTab(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('panel-'+tab).classList.add('active');
 }
-function copyEl(id) {
-  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
-    const b = event.target; b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy',1500);
+function copyEl(id){
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{
+    const b=event.target; b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy',1500);
   });
 }
-function showAlert(id,type,msg) { const e=document.getElementById(id); e.className='alert show alert-'+type; e.textContent=msg; }
-function hideAlert(id) { document.getElementById(id).className='alert'; }
+function showAlert(id,type,msg){ const e=document.getElementById(id); e.className='alert show alert-'+type; e.textContent=msg; }
+function hideAlert(id){ document.getElementById(id).className='alert'; }
 
-function priceItemHtml(pfx, i, item={}) {
+// QR CODE GENERATION
+function generateQR(containerId, jsonData) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  const jsonStr = JSON.stringify(jsonData);
+  new QRCode(container, {
+    text: jsonStr,
+    width: 200,
+    height: 200,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  return jsonStr;
+}
+
+function buildQRData(deviceId, deviceName, deviceType, model, firmwareVersion, solanaWallet, baseWallet) {
+  const chains = [];
+  if (solanaWallet) chains.push({ chain: 'solana', wallet: solanaWallet });
+  if (baseWallet) chains.push({ chain: 'base', wallet: baseWallet });
+  return { deviceId, deviceName, deviceType, model: model || '', firmwareVersion: firmwareVersion || '1.0.0', chains };
+}
+
+function downloadQR() {
+  const canvas = document.querySelector('#qr-canvas canvas');
+  if (!canvas) return;
+  const deviceId = document.getElementById('res-deviceId').textContent || 'device';
+  const link = document.createElement('a');
+  link.download = `TSE-X-QR-${deviceId}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function downloadLkpQR() {
+  const canvas = document.querySelector('#lkp-qr-canvas canvas');
+  if (!canvas) return;
+  const deviceId = document.getElementById('lkp-deviceId').value.trim() || 'device';
+  const link = document.createElement('a');
+  link.download = `TSE-X-QR-${deviceId}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function copyQRJson() {
+  if (!currentQRData) return;
+  navigator.clipboard.writeText(JSON.stringify(currentQRData)).then(() => {
+    const b = event.target; b.textContent = 'Copied!'; setTimeout(() => b.textContent = 'Copy JSON', 1500);
+  });
+}
+
+// PRICE ITEM HTML
+function priceItemHtml(pfx,i,item={}){
   return `<div class="price-item" id="${pfx}-item-${i}">
     <div class="price-item-header"><span class="price-item-num">Item ${i+1}</span><button class="app-btn app-btn-danger app-btn-sm" onclick="rmPrice('${pfx}',${i})">Remove</button></div>
     <div class="form-group"><label>Name *</label><input type="text" id="${pfx}-name-${i}" placeholder="e.g. 30 Minute Unlock" value="${item.name||''}"></div>
@@ -358,16 +483,16 @@ function priceItemHtml(pfx, i, item={}) {
     </div>
   </div>`;
 }
-function addPriceItem(pfx) { document.getElementById(pfx+'-price-items').insertAdjacentHTML('beforeend', priceItemHtml(pfx, pc[pfx])); pc[pfx]++; }
-function rmPrice(pfx,i) { document.getElementById(pfx+'-item-'+i)?.remove(); }
+function addPriceItem(pfx){ document.getElementById(pfx+'-price-items').insertAdjacentHTML('beforeend',priceItemHtml(pfx,pc[pfx])); pc[pfx]++; }
+function rmPrice(pfx,i){ document.getElementById(pfx+'-item-'+i)?.remove(); }
 
-function collectPrices(pfx, alertId) {
+function collectPrices(pfx,alertId){
   const prices=[];
-  for(let i=0;i<pc[pfx];i++) {
+  for(let i=0;i<pc[pfx];i++){
     const ne=document.getElementById(pfx+'-name-'+i); if(!ne) continue;
     const name=ne.value.trim(); if(!name) continue;
     const priceUsd=parseFloat(document.getElementById(pfx+'-price-'+i).value);
-    if(!priceUsd||priceUsd<0.01){showAlert(alertId,'error',`"${name}": price must be at least $0.01`);return null;}
+    if(!priceUsd||priceUsd<0.01){ showAlert(alertId,'error',`"${name}": price must be at least $0.01`); return null; }
     const dur=document.getElementById(pfx+'-duration-'+i).value;
     const img=document.getElementById(pfx+'-image-'+i).value.trim();
     const desc=document.getElementById(pfx+'-desc-'+i).value.trim();
@@ -376,16 +501,23 @@ function collectPrices(pfx, alertId) {
   return prices;
 }
 
-async function registerDevice() {
+// REGISTER DEVICE
+async function registerDevice(){
   const deviceId=document.getElementById('reg-deviceId').value.trim().toUpperCase();
   const deviceName=document.getElementById('reg-deviceName').value.trim();
   const deviceType=document.getElementById('reg-deviceType').value;
+  const model=document.getElementById('reg-model').value.trim();
+  const firmware=document.getElementById('reg-firmware').value.trim();
+  const solanaWallet=document.getElementById('reg-solanaWallet').value.trim();
+  const baseWallet=document.getElementById('reg-baseWallet').value.trim();
   hideAlert('reg-alert');
-  if(!deviceId||!deviceName||!deviceType) return showAlert('reg-alert','error','Please fill in all required fields.');
+  if(!deviceId||!deviceName||!deviceType) return showAlert('reg-alert','error','Please fill in Device ID, Name and Type.');
   if(!deviceId.startsWith('TSE-')&&!deviceId.startsWith('X402-')) return showAlert('reg-alert','error','Device ID must start with TSE- or X402-');
+  if(!solanaWallet&&!baseWallet) return showAlert('reg-alert','error','Please enter at least one wallet address (Solana or Base).');
+
   const btn=document.getElementById('reg-btn'); btn.innerHTML='<span class="spinner"></span> Registering...'; btn.disabled=true;
-  try {
-    const res=await fetch(`${API}/devices/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId,deviceName,deviceType})});
+  try{
+    const res=await fetch(`${API}/devices/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId,deviceName,deviceType,model,firmwareVersion:firmware,solanaWalletAddress:solanaWallet,baseWalletAddress:baseWallet})});
     const data=await res.json();
     if(!data.success) throw new Error(data.error||'Registration failed');
     regDeviceId=data.deviceId; regDeviceSecret=data.deviceSecret;
@@ -394,60 +526,86 @@ async function registerDevice() {
     document.getElementById('res-arduino').textContent=data.arduinoCode;
     document.getElementById('reg-result').style.display='block';
     document.getElementById('reg-prices-card').style.display='block';
+
+    // Generate QR code
+    currentQRData = buildQRData(deviceId, deviceName, deviceType, model, firmware||'1.0.0', solanaWallet, baseWallet);
+    const jsonStr = generateQR('qr-canvas', currentQRData);
+    document.getElementById('qr-json-preview').textContent = JSON.stringify(currentQRData, null, 2);
+    document.getElementById('reg-qr-box').style.display='block';
+
     showAlert('reg-alert','success','Device registered successfully!');
-  } catch(e){ showAlert('reg-alert','error',e.message); }
-  finally { btn.innerHTML='Register Device'; btn.disabled=false; }
+  }catch(e){ showAlert('reg-alert','error',e.message); }
+  finally{ btn.innerHTML='Register Device'; btn.disabled=false; }
 }
 
-async function saveRegPrices() {
+async function saveRegPrices(){
   if(!regDeviceId||!regDeviceSecret) return showAlert('reg-prices-alert','error','Register a device first.');
   const prices=collectPrices('reg','reg-prices-alert'); if(prices===null) return;
   if(prices.length===0) return showAlert('reg-prices-alert','error','Add at least one price item.');
   const btn=document.getElementById('reg-prices-btn'); btn.innerHTML='<span class="spinner"></span> Saving...'; btn.disabled=true;
-  try {
+  try{
     const res=await fetch(`${API}/api/device-prices/${regDeviceId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret:regDeviceSecret,prices})});
     const data=await res.json(); if(!data.success) throw new Error(data.error);
     showAlert('reg-prices-alert','success',`${data.count} price item(s) saved!`);
-  } catch(e){ showAlert('reg-prices-alert','error',e.message); }
-  finally { btn.innerHTML='Save Prices'; btn.disabled=false; }
+  }catch(e){ showAlert('reg-prices-alert','error',e.message); }
+  finally{ btn.innerHTML='Save Prices'; btn.disabled=false; }
 }
 
-async function loadPrices() {
+async function loadPrices(){
   const deviceId=document.getElementById('mgr-deviceId').value.trim(); hideAlert('mgr-alert');
   if(!deviceId) return showAlert('mgr-alert','error','Please enter a Device ID.');
   const btn=document.getElementById('load-btn'); btn.innerHTML='<span class="spinner"></span> Loading...'; btn.disabled=true;
-  try {
+  try{
     const res=await fetch(`${API}/api/device-prices/${deviceId}`);
     const data=await res.json(); if(!data.success) throw new Error(data.error);
     const c=document.getElementById('mgr-price-items'); c.innerHTML=''; pc.mgr=0;
     if(data.prices.length>0){ data.prices.forEach(item=>{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr,item)); pc.mgr++; }); }
-    else { c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr)); pc.mgr++; }
+    else{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr)); pc.mgr++; }
     document.getElementById('mgr-prices-section').style.display='block';
     showAlert('mgr-alert','info',`Loaded ${data.prices.length} price item(s) for ${data.deviceName}.`);
-  } catch(e){ showAlert('mgr-alert','error',e.message); }
-  finally { btn.innerHTML='Load Current Prices'; btn.disabled=false; }
+  }catch(e){ showAlert('mgr-alert','error',e.message); }
+  finally{ btn.innerHTML='Load Current Prices'; btn.disabled=false; }
 }
 
-async function updatePrices() {
+async function updatePrices(){
   const deviceId=document.getElementById('mgr-deviceId').value.trim();
   const deviceSecret=document.getElementById('mgr-secret').value.trim();
   if(!deviceSecret) return showAlert('mgr-alert','error','Device Secret is required.');
   const prices=collectPrices('mgr','mgr-alert'); if(prices===null) return;
   if(prices.length===0) return showAlert('mgr-alert','error','Add at least one price item.');
   const btn=document.getElementById('update-btn'); btn.innerHTML='<span class="spinner"></span> Updating...'; btn.disabled=true;
-  try {
+  try{
     const res=await fetch(`${API}/api/device-prices/${deviceId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret,prices})});
     const data=await res.json(); if(!data.success) throw new Error(data.error);
     showAlert('mgr-alert','success',`${data.count} price item(s) updated!`);
-  } catch(e){ showAlert('mgr-alert','error',e.message); }
-  finally { btn.innerHTML='Update Prices'; btn.disabled=false; }
+  }catch(e){ showAlert('mgr-alert','error',e.message); }
+  finally{ btn.innerHTML='Update Prices'; btn.disabled=false; }
 }
 
-async function lookupDevice() {
+async function deleteDevice(){
+  const deviceId=document.getElementById('del-deviceId').value.trim().toUpperCase();
+  const deviceSecret=document.getElementById('del-secret').value.trim();
+  const confirm=document.getElementById('del-confirm').value.trim().toUpperCase();
+  hideAlert('del-alert');
+  if(!deviceId||!deviceSecret||!confirm) return showAlert('del-alert','error','Please fill in all fields.');
+  if(deviceId!==confirm) return showAlert('del-alert','error','Device ID confirmation does not match.');
+  const btn=document.getElementById('del-btn'); btn.innerHTML='<span class="spinner"></span> Deleting...'; btn.disabled=true;
+  try{
+    const res=await fetch(`${API}/api/device-prices/${deviceId}/device`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret})});
+    const data=await res.json(); if(!data.success) throw new Error(data.error);
+    showAlert('del-alert','success',data.message);
+    document.getElementById('del-deviceId').value='';
+    document.getElementById('del-secret').value='';
+    document.getElementById('del-confirm').value='';
+  }catch(e){ showAlert('del-alert','error',e.message); }
+  finally{ btn.innerHTML='Permanently Delete Device'; btn.disabled=false; }
+}
+
   const deviceId=document.getElementById('lkp-deviceId').value.trim(); hideAlert('lkp-alert');
   document.getElementById('lkp-result').classList.remove('show');
+  document.getElementById('lkp-qr-box').classList.remove('show');
   if(!deviceId) return showAlert('lkp-alert','error','Please enter a Device ID.');
-  try {
+  try{
     const res=await fetch(`${API}/api/device-prices/${deviceId}`);
     const data=await res.json(); if(!data.success) throw new Error(data.error);
     document.getElementById('lkp-name').textContent=data.deviceName;
@@ -459,7 +617,14 @@ async function lookupDevice() {
     list.innerHTML=data.prices.length===0?'<div class="empty">No prices set for this device yet.</div>':
       data.prices.map(p=>`<div class="price-list-item"><div><div class="price-name">${p.name}</div>${p.description?`<div class="price-desc">${p.description}</div>`:''}<div class="price-meta">${p.duration?`<span class="price-tag">⏱ ${p.duration} min</span>`:''} ${p.image?`<span class="price-tag">🖼 Image</span>`:''}</div></div><div class="price-amount">$${p.priceUsd.toFixed(2)}</div></div>`).join('');
     document.getElementById('lkp-result').classList.add('show');
-  } catch(e){ showAlert('lkp-alert','error',e.message); }
+
+    // Generate QR for lookup using stored wallet addresses
+    const solanaWallet = data.solanaWalletAddress || '';
+    const baseWallet = data.baseWalletAddress || '';
+    currentLkpQRData = buildQRData(data.deviceId, data.deviceName, data.deviceType, data.model||'', data.firmwareVersion||'1.0.0', solanaWallet, baseWallet);
+    generateQR('lkp-qr-canvas', currentLkpQRData);
+    document.getElementById('lkp-qr-box').classList.add('show');
+  }catch(e){ showAlert('lkp-alert','error',e.message); }
 }
 </script>
 </body>
