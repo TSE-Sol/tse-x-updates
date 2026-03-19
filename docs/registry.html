@@ -601,6 +601,7 @@ async function deleteDevice(){
   finally{ btn.innerHTML='Permanently Delete Device'; btn.disabled=false; }
 }
 
+async function lookupDevice(){
   const deviceId=document.getElementById('lkp-deviceId').value.trim(); hideAlert('lkp-alert');
   document.getElementById('lkp-result').classList.remove('show');
   document.getElementById('lkp-qr-box').classList.remove('show');
