@@ -278,6 +278,14 @@ header h1{font-size:17px;font-weight:600;}
         <button class="app-btn app-btn-outline" style="margin-bottom:20px" onclick="addPriceItem('mgr')">+ Add Price Item</button>
         <hr class="divider">
         <button class="app-btn app-btn-primary" onclick="updatePrices()" id="update-btn">Update Prices</button>
+        <div class="qr-box" id="mgr-qr-box" style="display:none;margin-top:20px">
+          <h3>Device QR Code</h3>
+          <p>Print or display this QR code on your device so users can scan and pay.</p>
+          <div id="mgr-qr-canvas"></div>
+          <div class="qr-actions" style="margin-top:12px">
+            <button class="app-btn app-btn-primary" onclick="downloadMgrQR()">Download QR Code</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -563,6 +571,13 @@ async function loadPrices(){
     else{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr)); pc.mgr++; }
     document.getElementById('mgr-prices-section').style.display='block';
     showAlert('mgr-alert','info',`Loaded ${data.prices.length} price item(s) for ${data.deviceName}.`);
+
+    // Generate QR code
+    const mgrQRData = buildQRData(data.deviceId, data.deviceName, data.deviceType, data.model||'', data.firmwareVersion||'1.0.0', data.solanaWalletAddress||'', data.baseWalletAddress||'');
+    generateQR('mgr-qr-canvas', mgrQRData);
+    window._mgrQRData = mgrQRData;
+    window._mgrDeviceId = data.deviceId;
+    document.getElementById('mgr-qr-box').style.display='block';
   }catch(e){ showAlert('mgr-alert','error',e.message); }
   finally{ btn.innerHTML='Load Current Prices'; btn.disabled=false; }
 }
@@ -580,6 +595,15 @@ async function updatePrices(){
     showAlert('mgr-alert','success',`${data.count} price item(s) updated!`);
   }catch(e){ showAlert('mgr-alert','error',e.message); }
   finally{ btn.innerHTML='Update Prices'; btn.disabled=false; }
+}
+
+function downloadMgrQR() {
+  const canvas = document.querySelector('#mgr-qr-canvas canvas');
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = `TSE-X-QR-${window._mgrDeviceId||'device'}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 }
 
 async function deleteDevice(){
