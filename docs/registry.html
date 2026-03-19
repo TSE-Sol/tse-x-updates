@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSE-X Device Registry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0e17;--card:#111827;--card2:#1a2235;--border:#1e293b;
+  --teal:#14b8a6;--teal-dim:#0d9488;--teal-glow:rgba(20,184,166,0.12);
+  --purple:#a78bfa;--blue:#60a5fa;--green:#34d399;--red:#f87171;--orange:#fb923c;
+  --text:#e2e8f0;--text-dim:#94a3b8;--text-muted:#64748b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(20,184,166,.05) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(124,58,237,.04) 0%,transparent 60%);pointer-events:none;z-index:0;}
+
+/* AUTH */
+#auth-screen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px;width:100%;max-width:400px;}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.auth-logo-mark{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--teal);background:var(--teal-glow);border:1px solid rgba(20,184,166,.2);padding:4px 12px;border-radius:100px;}
+.auth-logo h1{font-size:16px;font-weight:600;}
+.auth-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+.auth-sub{font-size:13px;color:var(--text-muted);margin-bottom:28px;}
+.auth-tabs{display:flex;gap:2px;background:var(--card2);border-radius:8px;padding:3px;margin-bottom:24px;}
+.auth-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text-muted);transition:all .2s;}
+.auth-tab.active{background:var(--card);color:var(--text);}
+.auth-alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
+.auth-alert.show{display:block;}
+.auth-error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);}
+.auth-success{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--green);}
+.forgot-btn{font-size:12px;color:var(--teal);cursor:pointer;text-align:right;display:block;margin-top:-8px;margin-bottom:14px;background:none;border:none;font-family:'Outfit',sans-serif;width:100%;}
+.forgot-btn:hover{text-decoration:underline;}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text-muted);font-size:12px;}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* SHARED INPUTS */
+label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:5px;}
+input,select,textarea{width:100%;background:#0d1421;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--teal-dim);}
+select option{background:#111827;}
+.form-group{margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-hint{font-size:11px;color:var(--text-muted);margin-top:4px;}
+
+/* BUTTONS */
+.btn{font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;padding:11px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:10px;}
+.btn:last-child{margin-bottom:0;}
+.btn-primary{background:var(--teal);color:#0a0e17;}
+.btn-primary:hover{background:var(--teal-dim);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-google{background:var(--card2);border:1px solid var(--border);color:var(--text);}
+.btn-google:hover{border-color:var(--teal-dim);}
+.btn-apple{background:#fff;color:#000;}
+.btn-apple:hover{background:#e5e7eb;}
+.app-btn{font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;}
+.app-btn-primary{background:var(--teal);color:#0a0e17;}
+.app-btn-primary:hover{background:var(--teal-dim);}
+.app-btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.app-btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-dim);}
+.app-btn-outline:hover{border-color:var(--teal-dim);color:var(--teal);}
+.app-btn-danger{background:transparent;border:1px solid rgba(248,113,113,.3);color:var(--red);}
+.app-btn-danger:hover{background:rgba(248,113,113,.1);}
+.app-btn-sm{padding:6px 12px;font-size:12px;}
+
+/* APP */
+#app-screen{display:none;}
+header{position:relative;z-index:1;border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:14px;}
+.logo-mark{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--teal);background:var(--teal-glow);border:1px solid rgba(20,184,166,.2);padding:4px 12px;border-radius:100px;}
+header h1{font-size:17px;font-weight:600;}
+.user-info{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.user-email{font-size:12px;color:var(--text-muted);}
+.btn-signout{font-size:12px;padding:5px 12px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;}
+.btn-signout:hover{border-color:var(--red);color:var(--red);}
+.tabs{position:relative;z-index:1;display:flex;gap:2px;padding:16px 24px 0;border-bottom:1px solid var(--border);}
+.tab{font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;padding:10px 20px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+.tab:hover:not(.active){color:var(--text);}
+.panel{display:none;position:relative;z-index:1;max-width:760px;margin:0 auto;padding:28px 24px;}
+.panel.active{display:block;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;}
+.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.card-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;}
+.alert.show{display:block;}
+.alert-success{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--green);}
+.alert-error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);}
+.alert-info{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);color:var(--blue);}
+.secret-box{background:#0d1421;border:1px solid rgba(20,184,166,.3);border-radius:10px;padding:20px;margin-top:16px;}
+.secret-box h3{font-size:14px;font-weight:600;color:var(--teal);margin-bottom:4px;}
+.secret-box p{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
+.secret-value{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;word-break:break-all;display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.copy-btn{font-size:11px;color:var(--teal);background:none;border:none;cursor:pointer;white-space:nowrap;font-family:'Outfit',sans-serif;}
+.copy-btn:hover{text-decoration:underline;}
+.arduino-code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;margin-top:8px;white-space:pre;overflow-x:auto;color:var(--purple);}
+.price-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;}
+.price-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.price-item-num{font-size:11px;font-weight:600;color:var(--teal);background:var(--teal-glow);border:1px solid rgba(20,184,166,.2);padding:2px 8px;border-radius:100px;}
+.price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.device-info{background:var(--card2);border-radius:10px;padding:16px;margin-bottom:16px;display:none;}
+.device-info.show{display:block;}
+.device-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.06em;}
+.badge-coffee{background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.3);color:var(--orange);}
+.badge-bike{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);color:var(--blue);}
+.badge-lock{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);color:var(--purple);}
+.badge-other{background:rgba(148,163,184,.1);border:1px solid rgba(148,163,184,.3);color:var(--text-dim);}
+.price-list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);}
+.price-list-item:last-child{border-bottom:none;}
+.price-name{font-size:14px;font-weight:500;}
+.price-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.price-meta{display:flex;gap:8px;margin-top:4px;}
+.price-tag{font-size:11px;color:var(--text-muted);background:var(--card);border:1px solid var(--border);padding:2px 8px;border-radius:100px;}
+.price-amount{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--teal);white-space:nowrap;}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:14px;}
+@media(max-width:600px){.form-row{grid-template-columns:1fr;}.price-grid{grid-template-columns:1fr 1fr;}.user-email{display:none;}}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">◆ TSE-X</div>
+      <h1>Device Registry</h1>
+    </div>
+    <div class="auth-title">Sign in</div>
+    <div class="auth-sub">You need an active TSE-X account to access the registry.</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="setAuthTab('login',this)">Log In</button>
+      <button class="auth-tab" onclick="setAuthTab('signup',this)">Sign Up</button>
+    </div>
+    <div class="auth-alert auth-error" id="auth-err"></div>
+    <div class="auth-alert auth-success" id="auth-ok"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="you@example.com"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="auth-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()"></div>
+    <button class="forgot-btn" id="forgot-btn" onclick="forgotPassword()">Forgot password?</button>
+    <button class="btn btn-primary" id="auth-btn" onclick="authSubmit()">Log In</button>
+    <div class="auth-divider">or continue with</div>
+    <button class="btn btn-google" onclick="signInGoogle()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Sign in with Google
+    </button>
+    <button class="btn btn-apple" onclick="signInApple()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98l-.09.06c-.22.14-2.18 1.27-2.16 3.8.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      Sign in with Apple
+    </button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-screen">
+  <header>
+    <div class="logo-mark">◆ TSE-X</div>
+    <h1>Device Registry</h1>
+    <div class="user-info">
+      <span class="user-email" id="user-email"></span>
+      <button class="btn-signout" onclick="doSignOut()">Sign Out</button>
+    </div>
+  </header>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('register',this)">Register Device</button>
+    <button class="tab" onclick="switchTab('prices',this)">Manage Prices</button>
+    <button class="tab" onclick="switchTab('lookup',this)">Lookup Device</button>
+  </div>
+
+  <!-- REGISTER -->
+  <div class="panel active" id="panel-register">
+    <div class="card">
+      <div class="card-title">Register a New Device</div>
+      <div class="card-sub">Register your IoT device on the TSE-X network to accept crypto payments.</div>
+      <div class="alert" id="reg-alert"></div>
+      <div class="form-group"><label>Device ID *</label><input type="text" id="reg-deviceId" placeholder="e.g. TSE-COFFEE-001"><div class="form-hint">Must start with TSE- or X402-</div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Device Name *</label><input type="text" id="reg-deviceName" placeholder="e.g. My Coffee Maker"></div>
+        <div class="form-group"><label>Device Type *</label>
+          <select id="reg-deviceType">
+            <option value="">Select type...</option>
+            <option value="Coffee Machine">Coffee Machine</option>
+            <option value="Bike Lock">Bike Lock</option>
+            <option value="Door Lock">Door Lock</option>
+            <option value="Vending Machine">Vending Machine</option>
+            <option value="EV Charger">EV Charger</option>
+            <option value="Smart Light">Smart Light</option>
+            <option value="IoT Device">Other IoT Device</option>
+          </select>
+        </div>
+      </div>
+      <button class="app-btn app-btn-primary" onclick="registerDevice()" id="reg-btn">Register Device</button>
+      <div class="secret-box" id="reg-result" style="display:none">
+        <h3>✅ Device Registered!</h3>
+        <p>Save your Device Secret — you cannot retrieve it later.</p>
+        <div style="margin-bottom:10px"><div class="form-hint" style="margin-bottom:4px">Device ID</div><div class="secret-value"><span id="res-deviceId"></span><button class="copy-btn" onclick="copyEl('res-deviceId')">Copy</button></div></div>
+        <div style="margin-bottom:10px"><div class="form-hint" style="margin-bottom:4px">Device Secret</div><div class="secret-value"><span id="res-secret"></span><button class="copy-btn" onclick="copyEl('res-secret')">Copy</button></div></div>
+        <div class="form-hint" style="margin-bottom:6px">Arduino Code</div>
+        <div class="arduino-code" id="res-arduino"></div>
+      </div>
+    </div>
+    <div class="card" id="reg-prices-card" style="display:none">
+      <div class="card-title">Set Prices (Optional)</div>
+      <div class="card-sub">Add pricing options now or later in Manage Prices. Minimum $0.01 per item.</div>
+      <div id="reg-price-items"></div>
+      <button class="app-btn app-btn-outline" style="margin-bottom:16px" onclick="addPriceItem('reg')">+ Add Price Item</button>
+      <hr class="divider">
+      <button class="app-btn app-btn-primary" onclick="saveRegPrices()" id="reg-prices-btn">Save Prices</button>
+      <div class="alert" id="reg-prices-alert" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- MANAGE PRICES -->
+  <div class="panel" id="panel-prices">
+    <div class="card">
+      <div class="card-title">Manage Device Prices</div>
+      <div class="card-sub">Enter your Device ID and Secret to update pricing.</div>
+      <div class="form-row">
+        <div class="form-group"><label>Device ID *</label><input type="text" id="mgr-deviceId" placeholder="TSE-COFFEE-001"></div>
+        <div class="form-group"><label>Device Secret *</label><input type="password" id="mgr-secret" placeholder="Your 16-char secret"></div>
+      </div>
+      <button class="app-btn app-btn-outline" onclick="loadPrices()" id="load-btn">Load Current Prices</button>
+      <div class="alert" id="mgr-alert" style="margin-top:16px"></div>
+      <div id="mgr-prices-section" style="display:none">
+        <hr class="divider">
+        <div class="card-title" style="margin-bottom:4px">Price Items</div>
+        <div class="card-sub">Minimum price is $0.01 per item.</div>
+        <div id="mgr-price-items"></div>
+        <button class="app-btn app-btn-outline" style="margin-bottom:20px" onclick="addPriceItem('mgr')">+ Add Price Item</button>
+        <hr class="divider">
+        <button class="app-btn app-btn-primary" onclick="updatePrices()" id="update-btn">Update Prices</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOOKUP -->
+  <div class="panel" id="panel-lookup">
+    <div class="card">
+      <div class="card-title">Look Up Device</div>
+      <div class="card-sub">View any registered device and its pricing.</div>
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <input type="text" id="lkp-deviceId" placeholder="Enter Device ID e.g. TSE-COFFEE-001" style="flex:1" onkeydown="if(event.key==='Enter')lookupDevice()">
+        <button class="app-btn app-btn-primary" onclick="lookupDevice()">Look Up</button>
+      </div>
+      <div class="alert" id="lkp-alert"></div>
+      <div class="device-info" id="lkp-result">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div class="card-title" id="lkp-name"></div>
+          <div class="device-badge" id="lkp-badge"></div>
+        </div>
+        <div class="form-hint" id="lkp-id" style="margin-bottom:16px"></div>
+        <div id="lkp-prices-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, OAuthProvider, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyAXBrJZMaVP6TWeIZOXaTKZ5PIQkJkT5A4",
+  authDomain:"tse-x-1sfd1m.firebaseapp.com",
+  projectId:"tse-x-1sfd1m",
+  storageBucket:"tse-x-1sfd1m.firebasestorage.app",
+  messagingSenderId:"956403552968",
+  appId:"1:956403552968:web:06234be2224b4b7f4dcbfd"
+});
+const auth = getAuth(app);
+const gp = new GoogleAuthProvider();
+const ap = new OAuthProvider('apple.com');
+
+onAuthStateChanged(auth, u => {
+  if (u) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('user-email').textContent = u.email || u.displayName || '';
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+});
+
+window._a = { auth, gp, ap, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, signOut };
+</script>
+
+<script>
+const API = 'https://tse-x-backend.onrender.com';
+let authMode = 'login';
+let regDeviceId = '', regDeviceSecret = '';
+const pc = { reg:0, mgr:0 };
+
+function setAuthTab(mode, el) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('auth-btn').textContent = mode === 'login' ? 'Log In' : 'Create Account';
+  document.getElementById('forgot-btn').style.display = mode === 'login' ? 'block' : 'none';
+  hideAuthAlerts();
+}
+function hideAuthAlerts() { document.getElementById('auth-err').className='auth-alert auth-error'; document.getElementById('auth-ok').className='auth-alert auth-success'; }
+function showAuthErr(m) { const e=document.getElementById('auth-err'); e.className='auth-alert auth-error show'; e.textContent=m; }
+function showAuthOk(m) { const e=document.getElementById('auth-ok'); e.className='auth-alert auth-success show'; e.textContent=m; }
+
+const errMap = { 'auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password.','auth/email-already-in-use':'An account with this email already exists.','auth/invalid-email':'Please enter a valid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/popup-closed-by-user':'Sign-in popup was closed.','auth/invalid-credential':'Invalid email or password.' };
+
+async function authSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pw = document.getElementById('auth-pw').value;
+  hideAuthAlerts();
+  if (!email || !pw) return showAuthErr('Please enter your email and password.');
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    const a = window._a;
+    if (authMode === 'login') await a.signInWithEmailAndPassword(a.auth, email, pw);
+    else await a.createUserWithEmailAndPassword(a.auth, email, pw);
+  } catch(e) { showAuthErr(errMap[e.code] || 'Sign-in failed. Please try again.'); }
+  finally { btn.disabled=false; btn.textContent = authMode==='login'?'Log In':'Create Account'; }
+}
+async function signInGoogle() { hideAuthAlerts(); try { await window._a.signInWithPopup(window._a.auth, window._a.gp); } catch(e) { showAuthErr(errMap[e.code]||e.message); } }
+async function signInApple() { hideAuthAlerts(); try { await window._a.signInWithPopup(window._a.auth, window._a.ap); } catch(e) { showAuthErr(errMap[e.code]||e.message); } }
+async function forgotPassword() {
+  const email = document.getElementById('auth-email').value.trim();
+  hideAuthAlerts();
+  if (!email) return showAuthErr('Enter your email address first.');
+  try { await window._a.sendPasswordResetEmail(window._a.auth, email); showAuthOk('Password reset email sent. Check your inbox.'); }
+  catch(e) { showAuthErr(errMap[e.code]||e.message); }
+}
+function doSignOut() { window._a.signOut(window._a.auth); }
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+function copyEl(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+    const b = event.target; b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy',1500);
+  });
+}
+function showAlert(id,type,msg) { const e=document.getElementById(id); e.className='alert show alert-'+type; e.textContent=msg; }
+function hideAlert(id) { document.getElementById(id).className='alert'; }
+
+function priceItemHtml(pfx, i, item={}) {
+  return `<div class="price-item" id="${pfx}-item-${i}">
+    <div class="price-item-header"><span class="price-item-num">Item ${i+1}</span><button class="app-btn app-btn-danger app-btn-sm" onclick="rmPrice('${pfx}',${i})">Remove</button></div>
+    <div class="form-group"><label>Name *</label><input type="text" id="${pfx}-name-${i}" placeholder="e.g. 30 Minute Unlock" value="${item.name||''}"></div>
+    <div class="form-group"><label>Description</label><input type="text" id="${pfx}-desc-${i}" placeholder="Optional" value="${item.description||''}"></div>
+    <div class="price-grid">
+      <div class="form-group"><label>Price (USD) *</label><input type="number" id="${pfx}-price-${i}" placeholder="0.15" min="0.01" step="0.01" value="${item.priceUsd||''}"></div>
+      <div class="form-group"><label>Duration (min)</label><input type="number" id="${pfx}-duration-${i}" placeholder="Optional" min="1" value="${item.duration||''}"></div>
+      <div class="form-group"><label>Image URL</label><input type="text" id="${pfx}-image-${i}" placeholder="https://..." value="${item.image||''}"></div>
+    </div>
+  </div>`;
+}
+function addPriceItem(pfx) { document.getElementById(pfx+'-price-items').insertAdjacentHTML('beforeend', priceItemHtml(pfx, pc[pfx])); pc[pfx]++; }
+function rmPrice(pfx,i) { document.getElementById(pfx+'-item-'+i)?.remove(); }
+
+function collectPrices(pfx, alertId) {
+  const prices=[];
+  for(let i=0;i<pc[pfx];i++) {
+    const ne=document.getElementById(pfx+'-name-'+i); if(!ne) continue;
+    const name=ne.value.trim(); if(!name) continue;
+    const priceUsd=parseFloat(document.getElementById(pfx+'-price-'+i).value);
+    if(!priceUsd||priceUsd<0.01){showAlert(alertId,'error',`"${name}": price must be at least $0.01`);return null;}
+    const dur=document.getElementById(pfx+'-duration-'+i).value;
+    const img=document.getElementById(pfx+'-image-'+i).value.trim();
+    const desc=document.getElementById(pfx+'-desc-'+i).value.trim();
+    prices.push({name,description:desc||null,priceUsd,duration:dur?parseInt(dur):null,image:img||null});
+  }
+  return prices;
+}
+
+async function registerDevice() {
+  const deviceId=document.getElementById('reg-deviceId').value.trim().toUpperCase();
+  const deviceName=document.getElementById('reg-deviceName').value.trim();
+  const deviceType=document.getElementById('reg-deviceType').value;
+  hideAlert('reg-alert');
+  if(!deviceId||!deviceName||!deviceType) return showAlert('reg-alert','error','Please fill in all required fields.');
+  if(!deviceId.startsWith('TSE-')&&!deviceId.startsWith('X402-')) return showAlert('reg-alert','error','Device ID must start with TSE- or X402-');
+  const btn=document.getElementById('reg-btn'); btn.innerHTML='<span class="spinner"></span> Registering...'; btn.disabled=true;
+  try {
+    const res=await fetch(`${API}/devices/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId,deviceName,deviceType})});
+    const data=await res.json();
+    if(!data.success) throw new Error(data.error||'Registration failed');
+    regDeviceId=data.deviceId; regDeviceSecret=data.deviceSecret;
+    document.getElementById('res-deviceId').textContent=data.deviceId;
+    document.getElementById('res-secret').textContent=data.deviceSecret;
+    document.getElementById('res-arduino').textContent=data.arduinoCode;
+    document.getElementById('reg-result').style.display='block';
+    document.getElementById('reg-prices-card').style.display='block';
+    showAlert('reg-alert','success','Device registered successfully!');
+  } catch(e){ showAlert('reg-alert','error',e.message); }
+  finally { btn.innerHTML='Register Device'; btn.disabled=false; }
+}
+
+async function saveRegPrices() {
+  if(!regDeviceId||!regDeviceSecret) return showAlert('reg-prices-alert','error','Register a device first.');
+  const prices=collectPrices('reg','reg-prices-alert'); if(prices===null) return;
+  if(prices.length===0) return showAlert('reg-prices-alert','error','Add at least one price item.');
+  const btn=document.getElementById('reg-prices-btn'); btn.innerHTML='<span class="spinner"></span> Saving...'; btn.disabled=true;
+  try {
+    const res=await fetch(`${API}/api/device-prices/${regDeviceId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret:regDeviceSecret,prices})});
+    const data=await res.json(); if(!data.success) throw new Error(data.error);
+    showAlert('reg-prices-alert','success',`${data.count} price item(s) saved!`);
+  } catch(e){ showAlert('reg-prices-alert','error',e.message); }
+  finally { btn.innerHTML='Save Prices'; btn.disabled=false; }
+}
+
+async function loadPrices() {
+  const deviceId=document.getElementById('mgr-deviceId').value.trim(); hideAlert('mgr-alert');
+  if(!deviceId) return showAlert('mgr-alert','error','Please enter a Device ID.');
+  const btn=document.getElementById('load-btn'); btn.innerHTML='<span class="spinner"></span> Loading...'; btn.disabled=true;
+  try {
+    const res=await fetch(`${API}/api/device-prices/${deviceId}`);
+    const data=await res.json(); if(!data.success) throw new Error(data.error);
+    const c=document.getElementById('mgr-price-items'); c.innerHTML=''; pc.mgr=0;
+    if(data.prices.length>0){ data.prices.forEach(item=>{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr,item)); pc.mgr++; }); }
+    else { c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr)); pc.mgr++; }
+    document.getElementById('mgr-prices-section').style.display='block';
+    showAlert('mgr-alert','info',`Loaded ${data.prices.length} price item(s) for ${data.deviceName}.`);
+  } catch(e){ showAlert('mgr-alert','error',e.message); }
+  finally { btn.innerHTML='Load Current Prices'; btn.disabled=false; }
+}
+
+async function updatePrices() {
+  const deviceId=document.getElementById('mgr-deviceId').value.trim();
+  const deviceSecret=document.getElementById('mgr-secret').value.trim();
+  if(!deviceSecret) return showAlert('mgr-alert','error','Device Secret is required.');
+  const prices=collectPrices('mgr','mgr-alert'); if(prices===null) return;
+  if(prices.length===0) return showAlert('mgr-alert','error','Add at least one price item.');
+  const btn=document.getElementById('update-btn'); btn.innerHTML='<span class="spinner"></span> Updating...'; btn.disabled=true;
+  try {
+    const res=await fetch(`${API}/api/device-prices/${deviceId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret,prices})});
+    const data=await res.json(); if(!data.success) throw new Error(data.error);
+    showAlert('mgr-alert','success',`${data.count} price item(s) updated!`);
+  } catch(e){ showAlert('mgr-alert','error',e.message); }
+  finally { btn.innerHTML='Update Prices'; btn.disabled=false; }
+}
+
+async function lookupDevice() {
+  const deviceId=document.getElementById('lkp-deviceId').value.trim(); hideAlert('lkp-alert');
+  document.getElementById('lkp-result').classList.remove('show');
+  if(!deviceId) return showAlert('lkp-alert','error','Please enter a Device ID.');
+  try {
+    const res=await fetch(`${API}/api/device-prices/${deviceId}`);
+    const data=await res.json(); if(!data.success) throw new Error(data.error);
+    document.getElementById('lkp-name').textContent=data.deviceName;
+    document.getElementById('lkp-id').textContent=`ID: ${data.deviceId} · Type: ${data.deviceType}`;
+    const badge=document.getElementById('lkp-badge'); const t=data.deviceType.toLowerCase();
+    badge.textContent=data.deviceType;
+    badge.className='device-badge '+(t.includes('coffee')?'badge-coffee':t.includes('bike')?'badge-bike':t.includes('lock')?'badge-lock':'badge-other');
+    const list=document.getElementById('lkp-prices-list');
+    list.innerHTML=data.prices.length===0?'<div class="empty">No prices set for this device yet.</div>':
+      data.prices.map(p=>`<div class="price-list-item"><div><div class="price-name">${p.name}</div>${p.description?`<div class="price-desc">${p.description}</div>`:''}<div class="price-meta">${p.duration?`<span class="price-tag">⏱ ${p.duration} min</span>`:''} ${p.image?`<span class="price-tag">🖼 Image</span>`:''}</div></div><div class="price-amount">$${p.priceUsd.toFixed(2)}</div></div>`).join('');
+    document.getElementById('lkp-result').classList.add('show');
+  } catch(e){ showAlert('lkp-alert','error',e.message); }
+}
+</script>
+</body>
+</html>
