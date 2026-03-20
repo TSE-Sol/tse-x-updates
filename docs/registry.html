@@ -293,6 +293,7 @@ header h1{font-size:17px;font-weight:600;}
           <div id="mgr-qr-canvas"></div>
           <div class="qr-actions" style="margin-top:12px">
             <button class="app-btn app-btn-primary" onclick="downloadMgrQR()">Download QR Code</button>
+            <button class="app-btn app-btn-outline" onclick="downloadMgrArduinoFile()">⬇ Download Arduino File</button>
           </div>
         </div>
       </div>
@@ -701,6 +702,46 @@ function downloadMgrQR() {
   link.download = `TSE-X-QR-${window._mgrDeviceId||'device'}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
+}
+
+async function downloadMgrArduinoFile() {
+  const deviceId = document.getElementById('mgr-deviceId').value.trim().toUpperCase();
+  if (!deviceId) return showAlert('mgr-alert', 'error', 'Please load a device first.');
+  if (!window._mgrQRData) return showAlert('mgr-alert', 'error', 'Please load the device prices first.');
+
+  const btn = event.target;
+  btn.textContent = '⏳ Fetching...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/TSE-Sol/tse-x-arduino-library/main/examples/BikeLock/BikeLock.ino');
+    if (!res.ok) throw new Error('Could not fetch BikeLock.ino from GitHub');
+    let content = await res.text();
+
+    const qr = window._mgrQRData;
+    const solanaWallet = qr.chains?.find(c => c.chain === 'solana')?.wallet || '';
+    const baseWallet = qr.chains?.find(c => c.chain === 'base')?.wallet || '';
+
+    content = content.replace(/"YOUR_DEVICE_ID"/g, `"${deviceId}"`);
+    content = content.replace(/"YOUR_DEVICE_SECRET"/g, `"${document.getElementById('mgr-secret').value.trim()}"`);
+    content = content.replace(/"YOUR_DEVICE_NAME"/g, `"${qr.deviceName || deviceId}"`);
+    content = content.replace(/"YOUR_SOLANA_WALLET_ADDRESS"/g, `"${solanaWallet}"`);
+    content = content.replace(/"YOUR_BASE_WALLET_ADDRESS"/g, `"${baseWallet}"`);
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.download = `BikeLock-${deviceId}.ino`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    btn.textContent = '✅ Downloaded!';
+    setTimeout(() => { btn.textContent = '⬇ Download Arduino File'; btn.disabled = false; }, 2000);
+  } catch (err) {
+    showAlert('mgr-alert', 'error', 'Could not fetch Arduino file: ' + err.message);
+    btn.textContent = '⬇ Download Arduino File';
+    btn.disabled = false;
+  }
 }
 
 async function deleteDevice(){
