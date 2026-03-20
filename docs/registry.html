@@ -233,6 +233,15 @@ header h1{font-size:17px;font-weight:600;}
         <div style="margin-bottom:10px"><div class="form-hint" style="margin-bottom:4px">Device Secret</div><div class="secret-value"><span id="res-secret"></span><button class="copy-btn" onclick="copyEl('res-secret')">Copy</button></div></div>
         <div class="form-hint" style="margin-bottom:6px">Arduino Code</div>
         <div class="arduino-code" id="res-arduino"></div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+        <div class="form-hint" style="margin-bottom:8px">Arduino User Configuration Section</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Copy this entire block and paste it into the USER CONFIGURATION SECTION of your Arduino sketch, replacing the placeholder values.</p>
+        <div class="arduino-code" id="res-arduino-full" style="font-size:11px;line-height:1.6"></div>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="app-btn app-btn-primary" onclick="downloadFullArduinoFile()">⬇ Download Full Arduino File</button>
+          <button class="app-btn app-btn-outline" onclick="downloadArduinoConfig()">⬇ Config Only</button>
+          <button class="app-btn app-btn-outline" onclick="copyArduinoConfig()">Copy Config</button>
+        </div>
       </div>
 
       <!-- QR CODE -->
@@ -509,6 +518,84 @@ function collectPrices(pfx,alertId){
   return prices;
 }
 
+// ARDUINO CONFIG GENERATION
+function generateArduinoConfig(deviceId, deviceSecret, deviceName, solanaWallet, baseWallet) {
+  return `// ╔══════════════════════════════════════════════╗
+// ║         USER CONFIGURATION SECTION          ║
+// ║     Update these values for YOUR device!     ║
+// ╚══════════════════════════════════════════════╝
+
+// Device Identity
+#define DEVICE_ID        "${deviceId}"
+#define DEVICE_SECRET    "${deviceSecret}"
+
+// Device Display Name (shown in app)
+#define DEVICE_NAME      "${deviceName}"
+
+// Wallet addresses for receiving payments
+#define SOLANA_WALLET    "${solanaWallet}"
+#define BASE_WALLET      "${baseWallet}"`;
+}
+
+async function downloadFullArduinoFile() {
+  const deviceId = document.getElementById('res-deviceId').textContent.trim();
+  const deviceSecret = document.getElementById('res-secret').textContent.trim();
+  const deviceName = document.getElementById('reg-deviceName').value.trim();
+  const solanaWallet = document.getElementById('reg-solanaWallet').value.trim();
+  const baseWallet = document.getElementById('reg-baseWallet').value.trim();
+
+  const btn = event.target;
+  btn.textContent = '⏳ Fetching file...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/TSE-Sol/tse-x-arduino-library/main/examples/BikeLock/BikeLock.ino');
+    if (!res.ok) throw new Error('Could not fetch BikeLock.ino from GitHub');
+    let content = await res.text();
+
+    // Replace all placeholders with registered values
+    content = content.replace(/"YOUR_DEVICE_ID"/g, `"${deviceId}"`);
+    content = content.replace(/"YOUR_DEVICE_SECRET"/g, `"${deviceSecret}"`);
+    content = content.replace(/"YOUR_DEVICE_NAME"/g, `"${deviceName}"`);
+    content = content.replace(/"YOUR_SOLANA_WALLET_ADDRESS"/g, `"${solanaWallet}"`);
+    content = content.replace(/"YOUR_BASE_WALLET_ADDRESS"/g, `"${baseWallet}"`);
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.download = `BikeLock-${deviceId}.ino`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    btn.textContent = '✅ Downloaded!';
+    setTimeout(() => { btn.textContent = '⬇ Download Full Arduino File'; btn.disabled = false; }, 2000);
+  } catch (err) {
+    btn.textContent = '❌ Failed - try again';
+    btn.disabled = false;
+    showAlert('reg-alert', 'error', 'Could not fetch Arduino file: ' + err.message);
+  }
+}
+
+function downloadArduinoConfig() {
+  const config = document.getElementById('res-arduino-full').textContent;
+  const deviceId = document.getElementById('res-deviceId').textContent || 'device';
+  const blob = new Blob([config], { type: 'text/plain' });
+  const link = document.createElement('a');
+  link.download = `TSE-X-Config-${deviceId}.ino`;
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+function copyArduinoConfig() {
+  const config = document.getElementById('res-arduino-full').textContent;
+  navigator.clipboard.writeText(config).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Config', 1500);
+  });
+}
+
 // REGISTER DEVICE
 async function registerDevice(){
   const deviceId=document.getElementById('reg-deviceId').value.trim().toUpperCase();
@@ -532,6 +619,16 @@ async function registerDevice(){
     document.getElementById('res-deviceId').textContent=data.deviceId;
     document.getElementById('res-secret').textContent=data.deviceSecret;
     document.getElementById('res-arduino').textContent=data.arduinoCode;
+
+    // Generate full Arduino config block
+    const fullConfig = generateArduinoConfig(
+      deviceId, data.deviceSecret,
+      document.getElementById('reg-deviceName').value.trim(),
+      document.getElementById('reg-solanaWallet').value.trim(),
+      document.getElementById('reg-baseWallet').value.trim()
+    );
+    document.getElementById('res-arduino-full').textContent = fullConfig;
+
     document.getElementById('reg-result').style.display='block';
     document.getElementById('reg-prices-card').style.display='block';
 
