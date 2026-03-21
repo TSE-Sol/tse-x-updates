@@ -361,6 +361,11 @@ select option{background:var(--bg3);}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         Delete Device
       </div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" data-panel="profile" onclick="switchPanel('profile',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My Profile
+      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="user-box">
@@ -376,7 +381,13 @@ select option{background:var(--bg3);}
     <div class="topbar">
       <div class="topbar-title" id="topbar-title">Dashboard</div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
-        <div class="security-badge">🔒 Secured Session</div>
+        <button onclick="switchPanel('profile',document.querySelector('.nav-item[data-panel=profile]'))" style="display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:8px 14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
+          <div id="topbar-avatar" style="width:30px;height:30px;border-radius:8px;background:var(--blue-dim);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;">?</div>
+          <div style="text-align:left;">
+            <div id="topbar-name" style="font-size:13px;font-weight:600;color:var(--text);line-height:1.2;">Loading...</div>
+            <div id="topbar-email-short" style="font-size:11px;color:var(--text-muted);line-height:1.2;"></div>
+          </div>
+        </button>
       </div>
     </div>
 
@@ -629,6 +640,79 @@ select option{background:var(--bg3);}
         </div>
       </div>
 
+      <!-- PROFILE -->
+      <div class="panel" id="panel-profile">
+        <div style="max-width:560px;">
+          <!-- Profile Header Card -->
+          <div class="card card-accent" style="margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px;">
+              <div id="profile-avatar-large" style="width:72px;height:72px;border-radius:16px;background:var(--blue-dim);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0;border:2px solid rgba(36,81,209,.3);"></div>
+              <div>
+                <div id="profile-name-display" style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;letter-spacing:.02em;margin-bottom:4px;">—</div>
+                <div id="profile-email-display" style="font-size:13px;color:var(--text-muted);margin-bottom:6px;"></div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;" id="profile-badges"></div>
+              </div>
+            </div>
+            <hr class="divider" style="margin:0 0 16px;">
+            <!-- Stats Row -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="profile-stats">
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--blue);" id="prof-stat-devices">—</div>
+                <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-top:2px;">Devices</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--green);" id="prof-stat-referrals">—</div>
+                <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-top:2px;">Referrals</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--orange);" id="prof-stat-joined">—</div>
+                <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-top:2px;">Member Since</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Details Card -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-title">Profile Information</div>
+            <div class="card-sub">This information is synced with your TSE-X app account.</div>
+            <div class="alert" id="profile-alert"></div>
+
+            <div class="fg"><label>Display Name</label><input type="text" id="prof-displayName" placeholder="Your display name"></div>
+            <div class="fg"><label>Email Address</label><input type="text" id="prof-email" disabled style="opacity:.6;cursor:not-allowed;"><div class="fhint">Email cannot be changed here. Use the TSE-X app.</div></div>
+
+            <div class="section-label">Referral Info</div>
+            <div class="form-row">
+              <div class="fg">
+                <label>Your Referral Code</label>
+                <div class="secret-value" style="margin-top:0;">
+                  <span class="secret-text" id="prof-referralCode" style="font-size:14px;">—</span>
+                  <button class="copy-btn" onclick="copyProfileField('prof-referralCode')">Copy</button>
+                </div>
+              </div>
+              <div class="fg">
+                <label>Referred By</label>
+                <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text-muted);" id="prof-referredBy">—</div>
+              </div>
+            </div>
+
+            <hr class="divider">
+            <div style="display:flex;gap:10px;">
+              <button class="app-btn app-btn-primary" onclick="saveProfile()" id="save-profile-btn">Save Changes</button>
+              <button class="app-btn app-btn-outline" onclick="loadProfile()">Refresh</button>
+            </div>
+          </div>
+
+          <!-- Connected Wallets Card -->
+          <div class="card">
+            <div class="card-title">Connected Wallets</div>
+            <div class="card-sub">Wallet connections are managed in the TSE-X mobile app.</div>
+            <div id="profile-wallets">
+              <div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">Loading wallet info...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app-screen -->
@@ -640,6 +724,7 @@ select option{background:var(--bg3);}
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, OAuthProvider, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const app = initializeApp({
   apiKey:"AIzaSyAXBrJZMaVP6TWeIZOXaTKZ5PIQkJkT5A4",
@@ -650,6 +735,7 @@ const app = initializeApp({
   appId:"1:956403552968:web:06234be2224b4b7f4dcbfd"
 });
 const auth = getAuth(app);
+const db = getFirestore(app);
 const gp = new GoogleAuthProvider();
 const ap = new OAuthProvider('apple.com');
 
@@ -661,13 +747,17 @@ onAuthStateChanged(auth, u => {
     document.getElementById('user-email-display').textContent = email;
     document.getElementById('user-initial').textContent = (email[0] || '?').toUpperCase();
     window._uid = u.uid;
+    window._userEmail = email;
+    window._userPhotoURL = u.photoURL || '';
     loadMyDevices();
+    loadProfile();
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display = 'none';
   }
 });
 window._a = { auth, gp, ap, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, signOut };
+window._db = { db, doc, getDoc, updateDoc };
 </script>
 
 <script>
@@ -727,7 +817,7 @@ async function forgotPassword(){
 function doSignOut(){ if(confirm('Are you sure you want to sign out?')) window._a.signOut(window._a.auth); }
 
 // ===== NAVIGATION =====
-const panelTitles = {dashboard:'Dashboard',mydevices:'My Devices',register:'Register Device',prices:'Manage Prices',lookup:'Device Lookup',delete:'Delete Device'};
+const panelTitles = {dashboard:'Dashboard',mydevices:'My Devices',register:'Register Device',prices:'Manage Prices',lookup:'Device Lookup',delete:'Delete Device',profile:'My Profile'};
 function switchPanel(panel, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1100,6 +1190,123 @@ async function deleteDevice(){
     toast('Device deleted from network', 'success');
   } catch(e){ showAlert('del-alert','error',e.message); toast(e.message,'error'); }
   finally{ btn.innerHTML='Permanently Delete Device'; btn.disabled=false; }
+}
+
+// ===== PROFILE =====
+function setAvatarEl(el, photoURL, initial, size=30) {
+  if(photoURL) {
+    el.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${initial}'">`;
+  } else {
+    el.textContent = initial;
+  }
+}
+
+async function loadProfile() {
+  const uid = window._uid; if(!uid) return;
+  const email = window._userEmail || '';
+  const photoURL = window._userPhotoURL || '';
+  const initial = (email[0] || '?').toUpperCase();
+
+  // Update topbar
+  const topbarAvatar = document.getElementById('topbar-avatar');
+  setAvatarEl(topbarAvatar, photoURL, initial);
+  document.getElementById('topbar-email-short').textContent = email;
+
+  // Update sidebar
+  const sidebarAvatar = document.getElementById('user-initial');
+  setAvatarEl(sidebarAvatar, photoURL, initial);
+
+  // Set profile panel fields from Auth
+  document.getElementById('prof-email').value = email;
+  document.getElementById('prof-stat-devices').textContent = getMyDevices().length;
+
+  // Update large avatar
+  const largeAvatar = document.getElementById('profile-avatar-large');
+  setAvatarEl(largeAvatar, photoURL, initial, 72);
+
+  try {
+    const { db, doc, getDoc } = window._db;
+    const snap = await getDoc(doc(db, 'users', uid));
+    if(snap.exists()) {
+      const data = snap.data();
+      const displayName = data.display_name || data.displayName || email.split('@')[0] || '—';
+      document.getElementById('prof-displayName').value = displayName;
+      document.getElementById('profile-name-display').textContent = displayName;
+      document.getElementById('profile-email-display').textContent = email;
+      document.getElementById('topbar-name').textContent = displayName;
+      document.getElementById('prof-referralCode').textContent = data.referral_code || data.referralCode || '—';
+      document.getElementById('prof-referredBy').textContent = data.referred_by || data.referredBy || 'Direct signup';
+      document.getElementById('prof-stat-referrals').textContent = data.referral_count || data.referralCount || 0;
+
+      // Member since
+      const created = data.created_time || data.createdAt;
+      if(created) {
+        const d = created.toDate ? created.toDate() : new Date(created);
+        document.getElementById('prof-stat-joined').textContent = d.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+      }
+
+      // Wallets
+      const solWallet = data.phantom_wallet || data.solanaWallet || '';
+      const baseWallet = data.base_wallet || data.baseWallet || '';
+      const metamaskWallet = data.metamask_wallet || data.metamaskWallet || '';
+      const walletHtml = [
+        solWallet ? `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">🟣 Phantom (Solana)</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);word-break:break-all;">${solWallet}</div></div>` : '',
+        baseWallet || metamaskWallet ? `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">🦊 MetaMask (Base)</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);word-break:break-all;">${baseWallet||metamaskWallet}</div></div>` : '',
+      ].filter(Boolean).join('');
+      document.getElementById('profile-wallets').innerHTML = walletHtml || '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">No wallets connected. Connect wallets in the TSE-X mobile app.</div>';
+
+      // Badges
+      const badges = [];
+      if(data.is_tse_holder || data.isTseHolder) badges.push(`<span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--green);font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:100px;">✓ TSE Holder</span>`);
+      if(data.referral_count > 0 || data.referralCount > 0) badges.push(`<span style="background:rgba(36,81,209,.1);border:1px solid rgba(36,81,209,.25);color:#93b4ff;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:100px;">Referrer</span>`);
+      document.getElementById('profile-badges').innerHTML = badges.join('');
+
+    } else {
+      // Auth only, no Firestore doc
+      const name = email.split('@')[0];
+      document.getElementById('prof-displayName').value = name;
+      document.getElementById('profile-name-display').textContent = name;
+      document.getElementById('profile-email-display').textContent = email;
+      document.getElementById('topbar-name').textContent = name;
+      document.getElementById('profile-wallets').innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">No wallet data found. Connect wallets in the TSE-X mobile app.</div>';
+    }
+  } catch(err) {
+    console.error('Profile load error:', err);
+    const name = email.split('@')[0];
+    document.getElementById('prof-displayName').value = name;
+    document.getElementById('profile-name-display').textContent = name;
+    document.getElementById('topbar-name').textContent = name;
+  }
+}
+
+async function saveProfile() {
+  const uid = window._uid; if(!uid) return;
+  const displayName = document.getElementById('prof-displayName').value.trim();
+  if(!displayName) return showAlert('profile-alert','error','Display name cannot be empty.');
+  const btn = document.getElementById('save-profile-btn');
+  btn.innerHTML = '<span class="spinner"></span> Saving...'; btn.disabled = true;
+  try {
+    const { db, doc, updateDoc } = window._db;
+    await updateDoc(doc(db, 'users', uid), {
+      display_name: displayName,
+      displayName: displayName,
+    });
+    document.getElementById('profile-name-display').textContent = displayName;
+    document.getElementById('topbar-name').textContent = displayName;
+    showAlert('profile-alert','success','Profile updated successfully.');
+    toast('Profile saved', 'success');
+  } catch(err) {
+    showAlert('profile-alert','error','Could not save: '+err.message);
+    toast('Save failed: '+err.message, 'error');
+  } finally {
+    btn.innerHTML = 'Save Changes'; btn.disabled = false;
+  }
+}
+
+function copyProfileField(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+    toast('Copied to clipboard', 'success');
+  });
 }
 
 // Enter key on lookup
