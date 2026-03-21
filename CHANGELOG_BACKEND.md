@@ -1,5 +1,26 @@
 # TSE-X Backend Changelog
 
+## [1.2.0] - 2026-03-20
+
+### Added
+- **Device Pricing Module (`deviceprices.js`)** — New module with full REST API for managing multiple prices per device
+  - `GET /api/device-prices/:deviceId` — public, returns prices + wallet addresses + bleDeviceId
+  - `POST /api/device-prices/:deviceId` — set prices at registration (requires deviceSecret)
+  - `PUT /api/device-prices/:deviceId` — update prices (requires deviceSecret)
+  - `DELETE /api/device-prices/:deviceId/price/:index` — remove single price item
+  - `DELETE /api/device-prices/:deviceId/device` — delete entire device (requires deviceSecret)
+  - `POST /api/device-prices/:deviceId/ble-device-id` — save BLE MAC address after app connects
+- **TSE-X Device Registry** — Web-based operator dashboard with Firebase Auth, QR code generation, and full Arduino file download pre-filled with device credentials
+- **Multi-Price Support** — Each price item supports: name, description, priceUsd (min $0.01), duration (minutes), image URL
+- **BLE Device ID Auto-Save** — App reports BLE MAC after first connection; backend stores and returns it for direct reconnect
+
+### Fixed
+- **Device Registration** — `/devices/register` now properly saves all fields: `deviceName`, `deviceType`, `model`, `firmwareVersion`, `solanaWalletAddress`, `baseWalletAddress`
+- **Payment Routing** — All 3 challenge endpoints (TSE Solana, USDC Base, USDC Solana) now route payments to device operator's registered wallet, falling back to platform wallet only if none set
+- **BLE Heartbeat for BLE-Only Devices** — App-sourced heartbeats (`source: 'app'`) bypass Arduino secret requirement, allowing claimed BLE-only devices to be verified and accept payments without WiFi
+
+---
+
 ## [1.1.2] - 2026-03-14
 
 ### Added

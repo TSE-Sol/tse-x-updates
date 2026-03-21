@@ -12,9 +12,9 @@ This repository tracks updates to:
 
 | Component | Version | Updated |
 |-----------|---------|---------|
-| Mobile App | 1.2.3 | 2026-03-14 |
-| Backend API | 1.1.2 | 2026-03-14 |
-| Arduino Library | 1.4.0 | 2026-01-30 |
+| Mobile App | 1.2.4 | 2026-03-20 |
+| Backend API | 1.2.0 | 2026-03-20 |
+| Arduino Library | 1.5.0 | 2026-03-20 |
 
 ## Quick Links
 

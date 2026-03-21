@@ -95,18 +95,18 @@
     <div class="versions">
       <div class="version-card">
         <div class="version-label">Mobile App</div>
-        <div class="version-number">1.2.3</div>
-        <div class="version-date">Mar 14, 2026</div>
+        <div class="version-number">1.2.4</div>
+        <div class="version-date">Mar 20, 2026</div>
       </div>
       <div class="version-card">
         <div class="version-label">Backend API</div>
-        <div class="version-number">1.1.2</div>
-        <div class="version-date">Mar 14, 2026</div>
+        <div class="version-number">1.2.0</div>
+        <div class="version-date">Mar 20, 2026</div>
       </div>
       <div class="version-card">
         <div class="version-label">Arduino Library</div>
-        <div class="version-number">1.4.0</div>
-        <div class="version-date">Jan 30, 2026</div>
+        <div class="version-number">1.5.0</div>
+        <div class="version-date">Mar 20, 2026</div>
       </div>
     </div>
     <div class="filters">
@@ -118,7 +118,74 @@
     </div>
     <div class="timeline" id="timeline">
 
-      <!-- APP 1.2.3 -->
+      <!-- APP 1.2.4 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.4</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Mar 20, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Dynamic Multi-Price Selection</strong> — Devices can offer multiple pricing tiers (e.g. 10 min, 30 min, 1 hour). Price options shown inline on the device dashboard before payment</div>
+            <div class="change-item"><strong>Registry-Driven Pricing</strong> — App fetches device prices from the TSE-X Device Registry at page load and uses them for all payment methods</div>
+            <div class="change-item"><strong>BLE Device ID Persistence</strong> — After first BLE connection, device MAC address is saved to backend so future payments reconnect directly without scanning</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>BLE Reconnect After Phantom</strong> — App now stores BLE device ID in local widget state before payment, surviving the pendingTransaction clear that previously caused scan timeouts</div>
+            <div class="change-item"><strong>Price Display on Load</strong> — TSE price now re-fetches after device prices load, showing correct amount immediately instead of default $0.15</div>
+            <div class="change-item"><strong>USDC Payment Routing</strong> — Payments now route to device operator's registered wallet instead of platform wallet</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.2.0 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.0</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Mar 20, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Device Pricing Module</strong> — New deviceprices.js module with full REST API for managing multiple prices per device (GET, POST, PUT, DELETE)</div>
+            <div class="change-item"><strong>TSE-X Device Registry</strong> — Web-based operator dashboard at tse-sol.github.io/tse-x-updates/registry.html with Firebase Auth, QR code generation, and Arduino file download</div>
+            <div class="change-item"><strong>Multi-Price Support</strong> — Each price item supports name, description, USD price, duration (minutes), and image URL</div>
+            <div class="change-item"><strong>BLE Device ID Storage</strong> — App reports BLE MAC address after first connection; backend stores it for direct reconnect</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Device Registration</strong> — /devices/register now saves all fields: deviceName, deviceType, model, firmwareVersion, solanaWalletAddress, baseWalletAddress</div>
+            <div class="change-item"><strong>Payment Routing</strong> — All 3 challenge endpoints (TSE, USDC Base, USDC Solana) now route to device operator's registered wallet, falling back to platform wallet if none set</div>
+            <div class="change-item"><strong>BLE Heartbeat for BLE-Only Devices</strong> — App-sourced heartbeats (source: 'app') bypass secret requirement, allowing claimed BLE-only devices to be verified without WiFi</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HARDWARE 1.5.0 -->
+      <div class="release" data-category="hardware">
+        <div class="release-dot hardware"></div>
+        <div class="release-header">
+          <span class="release-version">v1.5.0</span>
+          <span class="release-tag hardware">Arduino Library</span>
+          <span class="release-date">Mar 20, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>USDC/MetaMask Unlock</strong> — BikeLock no longer shows "Payment Error / No TX" for USDC payments. Unlock now accepted for any valid duration regardless of txHash format, since payment is already verified by the backend before the BLE command is sent</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Unlock action uses "verified" as fallback txHash when payment method doesn't return a transaction hash (e.g. MetaMask USDC)</div>
+          </div>
+        </div>
+      </div>
       <div class="release" data-category="app">
         <div class="release-dot app"></div>
         <div class="release-header">
@@ -441,21 +508,11 @@
     </div>
     <div class="footer">
       <p>Built by <a href="https://github.com/TSE-Sol" target="_blank">TSE-Sol</a> · Pay anything, anywhere, with crypto.</p>
-      <p style="margin-top:0.4rem;">📧 <a href="mailto:thesocialexperimentsol@gmail.com">thesocialexperimentsol@gmail.com</a></p>
+      <p style="margin-top:0.4rem;">📧 <a href="/cdn-cgi/l/email-protection#77031f120418141e161b120f0712051e1a12190304181b37101a161e1b5914181a"><span class="__cf_email__" data-cfemail="ef9b878a9c808c868e838a979f8a9d86828a819b9c8083af88828e8683c18c8082">[email&#160;protected]</span></a></p>
     </div>
   </div>
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     function filterReleases(category) {
       document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
-      document.querySelectorAll('.release').forEach(release => {
-        if (category === 'all' || release.dataset.category === category) {
-          release.classList.remove('hidden');
-        } else {
-          release.classList.add('hidden');
-        }
-      });
-    }
-  </script>
-</body>
-</html>
+      document.querySelectorAll

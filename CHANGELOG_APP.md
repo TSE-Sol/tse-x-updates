@@ -4,6 +4,20 @@ All notable changes to the TSE-X mobile application.
 
 ---
 
+## [1.2.4] - 2026-03-20
+
+### Added
+- **Dynamic Multi-Price Selection** — Devices can offer multiple pricing tiers (e.g. 10 min $0.10, 30 min $0.30, 1 hour $0.50). Price options shown inline on the device dashboard before payment
+- **Registry-Driven Pricing** — App fetches device prices from the TSE-X Device Registry at page load, used for all payment challenges (TSE, USDC Base, USDC Solana)
+- **BLE Device ID Persistence** — After first BLE connection, MAC address saved to backend so future reconnects skip scanning entirely
+
+### Fixed
+- **BLE Reconnect After Phantom** — BLE device ID now stored in local widget state (`_connectedBleDeviceId`) before payment, surviving `pendingTransaction` clear that previously caused scan timeouts after returning from Phantom
+- **Price Display on Load** — TSE price re-fetches after device prices load, showing correct selected price immediately instead of default fallback
+- **USDC Payment Routing** — All payment challenge endpoints now send funds to device operator's registered wallet address instead of platform wallet
+
+---
+
 ## [1.2.3] - 2026-03-14
 
 ### Added
