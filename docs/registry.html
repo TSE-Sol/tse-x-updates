@@ -295,10 +295,6 @@ select option{background:var(--bg3);}
       <div class="auth-brand-sub">Device Registry Portal</div>
     </div>
     <div class="auth-card">
-      <div class="auth-tabs">
-        <button class="auth-tab active" onclick="setAuthTab('login',this)">Sign In</button>
-        <button class="auth-tab" onclick="setAuthTab('signup',this)">Create Account</button>
-      </div>
       <div class="auth-alert auth-err" id="auth-err"></div>
       <div class="auth-alert auth-ok" id="auth-ok"></div>
       <div class="fg"><label>Email Address</label><input type="email" id="auth-email" placeholder="operator@example.com" autocomplete="email"></div>
@@ -314,7 +310,7 @@ select option{background:var(--bg3);}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98l-.09.06c-.22.14-2.18 1.27-2.16 3.8.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
         Continue with Apple
       </button>
-      <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;line-height:1.5;">You must have an active TSE-X account to access this portal. Credentials are validated against the TSE-X network.</p>
+      <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;line-height:1.6;">You must have an active TSE-X account to access this portal.<br>Don't have an account? <strong style="color:var(--text-dim);">Download the TSE-X app</strong> to get started.</p>
     </div>
   </div>
 </div>
@@ -723,7 +719,7 @@ select option{background:var(--bg3);}
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, OAuthProvider, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, OAuthProvider, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const app = initializeApp({
@@ -756,7 +752,7 @@ onAuthStateChanged(auth, u => {
     document.getElementById('app-screen').style.display = 'none';
   }
 });
-window._a = { auth, gp, ap, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, signOut };
+window._a = { auth, gp, ap, signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, signOut };
 window._db = { db, doc, getDoc, updateDoc };
 </script>
 
@@ -780,18 +776,10 @@ function toast(msg, type='info') {
 }
 
 // ===== AUTH =====
-function setAuthTab(mode, el) {
-  authMode = mode;
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('auth-btn').textContent = mode === 'login' ? 'Sign In' : 'Create Account';
-  document.getElementById('forgot-btn').style.display = mode === 'login' ? 'block' : 'none';
-  hideAuthAlerts();
-}
 function hideAuthAlerts() { document.getElementById('auth-err').className='auth-alert auth-err'; document.getElementById('auth-ok').className='auth-alert auth-ok'; }
 function showAuthErr(m) { const e=document.getElementById('auth-err'); e.className='auth-alert auth-err show'; e.textContent=m; }
 function showAuthOk(m) { const e=document.getElementById('auth-ok'); e.className='auth-alert auth-ok show'; e.textContent=m; }
-const errMap = {'auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password.','auth/email-already-in-use':'An account with this email already exists.','auth/invalid-email':'Please enter a valid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/popup-closed-by-user':'Sign-in cancelled.','auth/invalid-credential':'Invalid email or password.'};
+const errMap = {'auth/user-not-found':'No account found with this email. Please sign in via the TSE-X app first.','auth/wrong-password':'Incorrect password.','auth/invalid-email':'Please enter a valid email address.','auth/popup-closed-by-user':'Sign-in cancelled.','auth/invalid-credential':'Invalid email or password.'};
 
 async function authSubmit() {
   const email=document.getElementById('auth-email').value.trim();
@@ -800,11 +788,9 @@ async function authSubmit() {
   if(!email||!pw) return showAuthErr('Please enter your email and password.');
   const btn=document.getElementById('auth-btn'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>';
   try {
-    const a=window._a;
-    if(authMode==='login') await a.signInWithEmailAndPassword(a.auth,email,pw);
-    else await a.createUserWithEmailAndPassword(a.auth,email,pw);
+    await window._a.signInWithEmailAndPassword(window._a.auth,email,pw);
   } catch(e){ showAuthErr(errMap[e.code]||'Authentication failed. Please try again.'); }
-  finally { btn.disabled=false; btn.textContent=authMode==='login'?'Sign In':'Create Account'; }
+  finally { btn.disabled=false; btn.textContent='Sign In'; }
 }
 async function signInGoogle(){ hideAuthAlerts(); try{ await window._a.signInWithPopup(window._a.auth,window._a.gp); }catch(e){ showAuthErr(errMap[e.code]||e.message); } }
 async function signInApple(){ hideAuthAlerts(); try{ await window._a.signInWithPopup(window._a.auth,window._a.ap); }catch(e){ showAuthErr(errMap[e.code]||e.message); } }
