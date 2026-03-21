@@ -4,351 +4,639 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TSE-X Device Registry</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root {
-  --bg:#0a0e17;--card:#111827;--card2:#1a2235;--border:#1e293b;
-  --teal:#14b8a6;--teal-dim:#0d9488;--teal-glow:rgba(20,184,166,0.12);
-  --purple:#a78bfa;--blue:#60a5fa;--green:#34d399;--red:#f87171;--orange:#fb923c;
-  --text:#e2e8f0;--text-dim:#94a3b8;--text-muted:#64748b;
+  --bg:#111213;
+  --bg2:#181a1c;
+  --bg3:#1f2123;
+  --card:#1a1c1e;
+  --card2:#222528;
+  --border:#2a2d31;
+  --border2:#333639;
+  --blue:#2451D1;
+  --blue-bright:#3b6ef7;
+  --blue-dim:#1a3d9e;
+  --blue-glow:rgba(36,81,209,0.15);
+  --blue-glow2:rgba(36,81,209,0.25);
+  --green:#22c55e;
+  --red:#ef4444;
+  --orange:#f97316;
+  --yellow:#eab308;
+  --text:#f0f2f5;
+  --text-dim:#9ca3af;
+  --text-muted:#6b7280;
+  --sidebar-w:240px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(20,184,166,.05) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(124,58,237,.04) 0%,transparent 60%);pointer-events:none;z-index:0;}
+html,body{height:100%;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden;}
 
-/* AUTH */
-#auth-screen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;}
-.auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px;width:100%;max-width:400px;}
-.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
-.auth-logo-mark{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--teal);background:var(--teal-glow);border:1px solid rgba(20,184,166,.2);padding:4px 12px;border-radius:100px;}
-.auth-logo h1{font-size:16px;font-weight:600;}
-.auth-title{font-size:22px;font-weight:700;margin-bottom:4px;}
-.auth-sub{font-size:13px;color:var(--text-muted);margin-bottom:28px;}
-.auth-tabs{display:flex;gap:2px;background:var(--card2);border-radius:8px;padding:3px;margin-bottom:24px;}
-.auth-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text-muted);transition:all .2s;}
-.auth-tab.active{background:var(--card);color:var(--text);}
+/* ===== POLYGON BACKGROUND ===== */
+.poly-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.poly-bg svg{width:100%;height:100%;opacity:.12;}
+
+/* ===== AUTH SCREEN ===== */
+#auth-screen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px;}
+.auth-wrap{width:100%;max-width:420px;}
+.auth-brand{text-align:center;margin-bottom:40px;}
+.auth-brand-logo{display:inline-flex;align-items:center;gap:12px;margin-bottom:16px;}
+.auth-brand-mark{width:48px;height:48px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;letter-spacing:.05em;color:#fff;}
+.auth-brand-name{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;}
+.auth-brand-name span{color:var(--blue);}
+.auth-brand-sub{font-size:13px;color:var(--text-muted);letter-spacing:.03em;text-transform:uppercase;}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;position:relative;overflow:hidden;}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue),transparent);}
+.auth-tabs{display:flex;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:24px;gap:2px;}
+.auth-tab{flex:1;text-align:center;padding:9px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text-muted);transition:all .2s;letter-spacing:.02em;font-family:'Barlow',sans-serif;}
+.auth-tab.active{background:var(--blue);color:#fff;}
 .auth-alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
 .auth-alert.show{display:block;}
-.auth-error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);}
-.auth-success-msg{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--green);}
-.forgot-btn{font-size:12px;color:var(--teal);cursor:pointer;text-align:right;display:block;margin-top:-8px;margin-bottom:14px;background:none;border:none;font-family:'Outfit',sans-serif;width:100%;}
-.forgot-btn:hover{text-decoration:underline;}
-.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text-muted);font-size:12px;}
-.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-
-/* SHARED */
-label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:5px;}
-input,select,textarea{width:100%;background:#0d1421;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;}
-input:focus,select:focus{border-color:var(--teal-dim);}
-select option{background:#111827;}
-.form-group{margin-bottom:14px;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.form-hint{font-size:11px;color:var(--text-muted);margin-top:4px;}
-
-/* BUTTONS */
-.btn{font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;padding:11px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:10px;}
-.btn:last-child{margin-bottom:0;}
-.btn-primary{background:var(--teal);color:#0a0e17;}
-.btn-primary:hover{background:var(--teal-dim);}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
-.btn-google{background:var(--card2);border:1px solid var(--border);color:var(--text);}
-.btn-google:hover{border-color:var(--teal-dim);}
+.auth-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);}
+.auth-ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green);}
+label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:5px;}
+input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);}
+input::placeholder{color:var(--text-muted);}
+select option{background:var(--bg3);}
+.fg{margin-bottom:14px;}
+.fhint{font-size:11px;color:var(--text-muted);margin-top:4px;}
+.btn{font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;padding:11px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:10px;letter-spacing:.02em;}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:var(--blue-bright);}
+.btn-blue:disabled{opacity:.5;cursor:not-allowed;}
+.btn-google{background:var(--bg3);border:1px solid var(--border2);color:var(--text);}
+.btn-google:hover{border-color:var(--blue);}
 .btn-apple{background:#fff;color:#000;}
 .btn-apple:hover{background:#e5e7eb;}
-.app-btn{font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px;}
-.app-btn-primary{background:var(--teal);color:#0a0e17;}
-.app-btn-primary:hover{background:var(--teal-dim);}
-.app-btn-primary:disabled{opacity:.5;cursor:not-allowed;}
-.app-btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-dim);}
-.app-btn-outline:hover{border-color:var(--teal-dim);color:var(--teal);}
-.app-btn-danger{background:transparent;border:1px solid rgba(248,113,113,.3);color:var(--red);}
-.app-btn-danger:hover{background:rgba(248,113,113,.1);}
-.app-btn-sm{padding:6px 12px;font-size:12px;}
+.auth-div{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text-muted);font-size:12px;}
+.auth-div::before,.auth-div::after{content:'';flex:1;height:1px;background:var(--border);}
+.forgot-btn{font-size:12px;color:var(--blue);cursor:pointer;text-align:right;display:block;margin-top:-8px;margin-bottom:14px;background:none;border:none;font-family:'Barlow',sans-serif;width:100%;}
+.forgot-btn:hover{text-decoration:underline;}
 
-/* APP */
-#app-screen{display:none;}
-header{position:relative;z-index:1;border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:14px;}
-.logo-mark{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--teal);background:var(--teal-glow);border:1px solid rgba(20,184,166,.2);padding:4px 12px;border-radius:100px;}
-header h1{font-size:17px;font-weight:600;}
-.user-info{margin-left:auto;display:flex;align-items:center;gap:10px;}
-.user-email{font-size:12px;color:var(--text-muted);}
-.btn-signout{font-size:12px;padding:5px 12px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;}
-.btn-signout:hover{border-color:var(--red);color:var(--red);}
-.tabs{position:relative;z-index:1;display:flex;gap:2px;padding:16px 24px 0;border-bottom:1px solid var(--border);}
-.tab{font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;padding:10px 20px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
-.tab.active{color:var(--teal);border-bottom-color:var(--teal);}
-.tab:hover:not(.active){color:var(--text);}
-.panel{display:none;position:relative;z-index:1;max-width:760px;margin:0 auto;padding:28px 24px;}
+/* ===== SIDEBAR ===== */
+#app-screen{display:none;width:100%;min-height:100vh;position:relative;z-index:1;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50;}
+.sidebar-brand{padding:24px 20px 20px;border-bottom:1px solid var(--border);}
+.sidebar-brand-logo{display:flex;align-items:center;gap:10px;}
+.sidebar-mark{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;}
+.sidebar-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;line-height:1.1;}
+.sidebar-title span{color:var(--blue);}
+.sidebar-sub{font-size:10px;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);padding:0 8px;margin-bottom:6px;margin-top:16px;}
+.nav-section:first-child{margin-top:0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--text-muted);font-size:14px;font-weight:500;transition:all .2s;border:1px solid transparent;margin-bottom:2px;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--blue-glow);color:var(--text);border-color:rgba(36,81,209,.3);}
+.nav-item.active .nav-icon{color:var(--blue);}
+.nav-icon{width:18px;height:18px;flex-shrink:0;opacity:.7;}
+.nav-item.active .nav-icon{opacity:1;}
+.nav-badge{margin-left:auto;background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border);}
+.user-box{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);}
+.user-avatar{width:32px;height:32px;background:var(--blue-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-email{font-size:12px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.signout-btn{font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:'Barlow',sans-serif;flex-shrink:0;padding:4px;}
+.signout-btn:hover{color:var(--red);}
+
+/* ===== MAIN CONTENT ===== */
+.main{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:40;}
+.topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
+.topbar-desc{font-size:13px;color:var(--text-muted);margin-left:auto;}
+.security-badge{display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:100px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--green);letter-spacing:.04em;text-transform:uppercase;}
+.content{flex:1;padding:28px;}
+.panel{display:none;}
 .panel.active{display:block;}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;}
-.card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;}
+
+/* ===== CARDS ===== */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;position:relative;overflow:hidden;}
+.card-accent{border-top:2px solid var(--blue);}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;}
 .card-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
-.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin:20px 0 12px;}
-.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;}
-.alert.show{display:block;}
-.alert-success{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--green);}
-.alert-error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red);}
-.alert-info{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);color:var(--blue);}
-
-/* SECRET BOX */
-.secret-box{background:#0d1421;border:1px solid rgba(20,184,166,.3);border-radius:10px;padding:20px;margin-top:16px;}
-.secret-box h3{font-size:14px;font-weight:600;color:var(--teal);margin-bottom:4px;}
-.secret-box p{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
-.secret-value{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;word-break:break-all;display:flex;justify-content:space-between;align-items:center;gap:12px;}
-.copy-btn{font-size:11px;color:var(--teal);background:none;border:none;cursor:pointer;white-space:nowrap;font-family:'Outfit',sans-serif;}
-.copy-btn:hover{text-decoration:underline;}
-.arduino-code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;margin-top:8px;white-space:pre;overflow-x:auto;color:var(--purple);}
-
-/* QR CODE */
-.qr-box{background:#0d1421;border:1px solid rgba(20,184,166,.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center;}
-.qr-box h3{font-size:14px;font-weight:600;color:var(--teal);margin-bottom:4px;}
-.qr-box p{font-size:12px;color:var(--text-muted);margin-bottom:16px;}
-#qr-canvas{display:inline-block;background:#fff;padding:12px;border-radius:8px;margin-bottom:16px;}
-#qr-canvas canvas, #qr-canvas img{display:block;}
-.qr-json{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:left;color:var(--text-muted);white-space:pre;overflow-x:auto;margin-bottom:12px;}
-.qr-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-
-/* LOOKUP QR */
-.lookup-qr-box{background:#0d1421;border:1px solid rgba(20,184,166,.2);border-radius:10px;padding:20px;margin-top:16px;text-align:center;display:none;}
-.lookup-qr-box.show{display:block;}
-#lkp-qr-canvas{display:inline-block;background:#fff;padding:10px;border-radius:6px;margin-bottom:12px;}
-
-/* PRICE ITEMS */
-.price-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;}
-.price-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-.price-item-num{font-size:11px;font-weight:600;color:var(--teal);background:var(--teal-glow);border:1px solid rgba(20,184,166,.2);padding:2px 8px;border-radius:100px;}
-.price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.device-info{background:var(--card2);border-radius:10px;padding:16px;margin-bottom:16px;display:none;}
-.device-info.show{display:block;}
-.device-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.06em;}
-.badge-coffee{background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.3);color:var(--orange);}
-.badge-bike{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);color:var(--blue);}
-.badge-lock{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);color:var(--purple);}
-.badge-other{background:rgba(148,163,184,.1);border:1px solid rgba(148,163,184,.3);color:var(--text-dim);}
-.price-list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);}
-.price-list-item:last-child{border-bottom:none;}
-.price-name{font-size:14px;font-weight:500;}
-.price-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
-.price-meta{display:flex;gap:8px;margin-top:4px;}
-.price-tag{font-size:11px;color:var(--text-muted);background:var(--card);border:1px solid var(--border);padding:2px 8px;border-radius:100px;}
-.price-amount{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--teal);white-space:nowrap;}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin:20px 0 12px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:rgba(36,81,209,.2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 .divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+
+/* ===== APP BUTTONS ===== */
+.app-btn{font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;padding:10px 18px;border-radius:8px;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px;letter-spacing:.02em;}
+.app-btn-primary{background:var(--blue);color:#fff;}
+.app-btn-primary:hover{background:var(--blue-bright);}
+.app-btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.app-btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text-dim);}
+.app-btn-outline:hover{border-color:var(--blue);color:var(--text);}
+.app-btn-danger{background:transparent;border:1px solid rgba(239,68,68,.3);color:var(--red);}
+.app-btn-danger:hover{background:rgba(239,68,68,.08);}
+.app-btn-sm{padding:6px 12px;font-size:12px;}
+.app-btn-ghost{background:transparent;border:none;color:var(--text-muted);}
+.app-btn-ghost:hover{color:var(--text);}
+
+/* ===== ALERTS ===== */
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;}
+.alert.show{display:flex;align-items:flex-start;gap:8px;}
+.alert-success{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:var(--green);}
+.alert-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:var(--red);}
+.alert-info{background:rgba(36,81,209,.08);border:1px solid rgba(36,81,209,.2);color:#93b4ff;}
+.alert-warn{background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);color:var(--orange);}
+
+/* ===== SECRET BOX ===== */
+.secret-box{background:var(--bg3);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:20px;margin-top:16px;}
+.secret-box-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--green);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.secret-box-sub{font-size:12px;color:var(--text-muted);margin-bottom:14px;}
+.secret-row{margin-bottom:10px;}
+.secret-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}
+.secret-value{background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.secret-text{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);flex:1;word-break:break-all;}
+.copy-btn{font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;white-space:nowrap;font-family:'Barlow',sans-serif;font-weight:600;padding:2px 6px;border-radius:4px;}
+.copy-btn:hover{background:var(--blue-glow);}
+.arduino-code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:12px;white-space:pre;overflow-x:auto;color:#93b4ff;}
+
+/* ===== QR BOX ===== */
+.qr-box{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:24px;margin-top:16px;text-align:center;}
+.qr-box-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--blue);margin-bottom:4px;}
+.qr-box-sub{font-size:12px;color:var(--text-muted);margin-bottom:16px;}
+.qr-canvas-wrap{display:inline-block;background:#fff;padding:12px;border-radius:10px;margin-bottom:16px;}
+.qr-json{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:left;color:var(--text-muted);white-space:pre;overflow-x:auto;margin-bottom:14px;}
+.qr-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+/* ===== PRICE ITEMS ===== */
+.price-item{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:16px;margin-bottom:10px;transition:border-color .2s;}
+.price-item:hover{border-color:var(--border);}
+.price-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.price-num{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);background:var(--blue-glow);border:1px solid rgba(36,81,209,.2);padding:2px 10px;border-radius:100px;}
+.price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* ===== MY DEVICES ===== */
+.device-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:4px;}
+.device-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.device-card::before{content:'';position:absolute;top:0;left:0;width:3px;bottom:0;background:var(--blue);border-radius:2px 0 0 2px;}
+.device-card:hover{border-color:rgba(36,81,209,.4);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.device-card-id{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);margin-bottom:6px;}
+.device-card-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.02em;margin-bottom:4px;}
+.device-card-type{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
+.device-card-meta{display:flex;align-items:center;gap:8px;}
+.device-type-badge{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:100px;}
+.badge-bike{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:#93c5fd;}
+.badge-coffee{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);color:#fdba74;}
+.badge-lock{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);color:#c4b5fd;}
+.badge-vending{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#86efac;}
+.badge-other{background:rgba(107,114,128,.1);border:1px solid rgba(107,114,128,.25);color:#d1d5db;}
+.device-card-date{font-size:11px;color:var(--text-muted);margin-left:auto;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4;}
+.empty-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:8px;color:var(--text-dim);}
+.empty-sub{font-size:13px;line-height:1.6;}
+
+/* ===== LOOKUP ===== */
+.lookup-result{background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:20px;margin-bottom:16px;display:none;}
+.lookup-result.show{display:block;}
+.lookup-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.lookup-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:.03em;}
+.price-list-item{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border);}
+.price-list-item:last-child{border-bottom:none;}
+.price-item-name{font-size:14px;font-weight:500;}
+.price-item-desc{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.price-item-tags{display:flex;gap:6px;margin-top:5px;}
+.price-tag{font-size:10px;color:var(--text-muted);background:var(--bg3);border:1px solid var(--border);padding:2px 8px;border-radius:100px;}
+.price-amount{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--blue);white-space:nowrap;}
+
+/* ===== STATS BAR ===== */
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;}
+.stat-value{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.01em;color:var(--text);}
+.stat-label{font-size:11px;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;margin-top:2px;}
+.stat-card:nth-child(1) .stat-value{color:var(--blue);}
+.stat-card:nth-child(2) .stat-value{color:var(--green);}
+.stat-card:nth-child(3) .stat-value{color:var(--orange);}
+
+/* ===== INLINE PRICE SELECTOR (in lookup/device) ===== */
+.price-selector-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;margin-bottom:6px;transition:all .2s;}
+.price-selector-item:hover{border-color:rgba(36,81,209,.4);background:var(--blue-glow);}
+.price-selector-item.selected{border-color:var(--blue);background:var(--blue-glow);}
+
+/* ===== SPINNER ===== */
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:14px;}
-@media(max-width:600px){.form-row{grid-template-columns:1fr;}.price-grid{grid-template-columns:1fr 1fr;}.user-email{display:none;}.qr-actions{flex-direction:column;}}
+
+/* ===== TOAST ===== */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;min-width:260px;max-width:360px;display:flex;align-items:center;gap:10px;pointer-events:auto;animation:slideIn .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.toast.success{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08);}
+.toast.error{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08);}
+.toast.info{border-color:rgba(36,81,209,.3);background:rgba(36,81,209,.08);}
+.toast-icon{font-size:16px;flex-shrink:0;}
+.toast-text{flex:1;}
+.toast-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0 2px;}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s;}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .form-row,.form-row-3,.price-grid,.stats-bar{grid-template-columns:1fr;}
+  .qr-actions{flex-direction:column;}
+  .device-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 
+<!-- POLYGON BACKGROUND -->
+<div class="poly-bg">
+<svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <polygon points="0,0 200,150 100,300" fill="#2a2d31"/>
+  <polygon points="200,150 400,0 500,200" fill="#1f2123"/>
+  <polygon points="400,0 700,100 600,250" fill="#2a2d31"/>
+  <polygon points="700,100 900,0 1000,200" fill="#222528"/>
+  <polygon points="900,0 1200,150 1100,300" fill="#1f2123"/>
+  <polygon points="1200,150 1440,0 1440,300" fill="#2a2d31"/>
+  <polygon points="0,300 100,300 200,150 0,450" fill="#222528"/>
+  <polygon points="100,300 300,400 200,150" fill="#1f2123"/>
+  <polygon points="300,400 500,200 200,150 100,300" fill="#2a2d31"/>
+  <polygon points="500,200 700,350 600,250 400,0" fill="#222528"/>
+  <polygon points="700,350 900,300 1000,200 700,100" fill="#1f2123"/>
+  <polygon points="900,300 1100,300 1200,150 1000,200" fill="#2a2d31"/>
+  <polygon points="1100,300 1440,300 1440,0 1200,150" fill="#222528"/>
+  <polygon points="0,450 200,600 300,400 100,300" fill="#1f2123"/>
+  <polygon points="200,600 400,500 300,400" fill="#2a2d31"/>
+  <polygon points="400,500 600,650 500,400 300,400" fill="#222528"/>
+  <polygon points="600,650 800,500 700,350 500,400" fill="#1f2123"/>
+  <polygon points="800,500 1000,600 900,300 700,350" fill="#2a2d31"/>
+  <polygon points="1000,600 1200,500 1100,300 900,300" fill="#222528"/>
+  <polygon points="1200,500 1440,600 1440,300 1100,300" fill="#1f2123"/>
+  <polygon points="0,600 200,750 200,600 0,450" fill="#2a2d31"/>
+  <polygon points="200,750 400,700 400,500 200,600" fill="#1f2123"/>
+  <polygon points="400,700 600,850 600,650 400,500" fill="#2a2d31"/>
+  <polygon points="600,850 800,750 800,500 600,650" fill="#222528"/>
+  <polygon points="800,750 1000,900 1000,600 800,500" fill="#1f2123"/>
+  <polygon points="1000,900 1200,750 1200,500 1000,600" fill="#2a2d31"/>
+  <polygon points="1200,750 1440,900 1440,600 1200,500" fill="#222528"/>
+  <polygon points="0,750 200,900 200,750 0,600" fill="#1f2123"/>
+  <polygon points="200,900 400,900 400,700 200,750" fill="#2a2d31"/>
+  <polygon points="400,900 600,900 600,850 400,700" fill="#222528"/>
+  <polygon points="600,900 800,900 800,750 600,850" fill="#1f2123"/>
+</svg>
+</div>
+
 <!-- AUTH SCREEN -->
 <div id="auth-screen">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <div class="auth-logo-mark">◆ TSE-X</div>
-      <h1>Device Registry</h1>
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="auth-brand-logo">
+        <div>
+          <div class="auth-brand-name">TSE<span>-X</span></div>
+        </div>
+      </div>
+      <div class="auth-brand-sub">Device Registry Portal</div>
     </div>
-    <div class="auth-title">Sign in</div>
-    <div class="auth-sub">You need an active TSE-X account to access the registry.</div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="setAuthTab('login',this)">Log In</button>
-      <button class="auth-tab" onclick="setAuthTab('signup',this)">Sign Up</button>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="setAuthTab('login',this)">Sign In</button>
+        <button class="auth-tab" onclick="setAuthTab('signup',this)">Create Account</button>
+      </div>
+      <div class="auth-alert auth-err" id="auth-err"></div>
+      <div class="auth-alert auth-ok" id="auth-ok"></div>
+      <div class="fg"><label>Email Address</label><input type="email" id="auth-email" placeholder="operator@example.com" autocomplete="email"></div>
+      <div class="fg"><label>Password</label><input type="password" id="auth-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()" autocomplete="current-password"></div>
+      <button class="forgot-btn" id="forgot-btn" onclick="forgotPassword()">Forgot password?</button>
+      <button class="btn btn-blue" id="auth-btn" onclick="authSubmit()">Sign In</button>
+      <div class="auth-div">or continue with</div>
+      <button class="btn btn-google" onclick="signInGoogle()">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <button class="btn btn-apple" onclick="signInApple()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98l-.09.06c-.22.14-2.18 1.27-2.16 3.8.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Continue with Apple
+      </button>
+      <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;line-height:1.5;">You must have an active TSE-X account to access this portal. Credentials are validated against the TSE-X network.</p>
     </div>
-    <div class="auth-alert auth-error" id="auth-err"></div>
-    <div class="auth-alert auth-success-msg" id="auth-ok"></div>
-    <div class="form-group"><label>Email</label><input type="email" id="auth-email" placeholder="you@example.com"></div>
-    <div class="form-group"><label>Password</label><input type="password" id="auth-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSubmit()"></div>
-    <button class="forgot-btn" id="forgot-btn" onclick="forgotPassword()">Forgot password?</button>
-    <button class="btn btn-primary" id="auth-btn" onclick="authSubmit()">Log In</button>
-    <div class="auth-divider">or continue with</div>
-    <button class="btn btn-google" onclick="signInGoogle()">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-      Sign in with Google
-    </button>
-    <button class="btn btn-apple" onclick="signInApple()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98l-.09.06c-.22.14-2.18 1.27-2.16 3.8.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-      Sign in with Apple
-    </button>
   </div>
 </div>
 
 <!-- MAIN APP -->
 <div id="app-screen">
-  <header>
-    <div class="logo-mark">◆ TSE-X</div>
-    <h1>Device Registry</h1>
-    <div class="user-info">
-      <span class="user-email" id="user-email"></span>
-      <button class="btn-signout" onclick="doSignOut()">Sign Out</button>
-    </div>
-  </header>
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('register',this)">Register Device</button>
-    <button class="tab" onclick="switchTab('prices',this)">Manage Prices</button>
-    <button class="tab" onclick="switchTab('lookup',this)">Lookup Device</button>
-    <button class="tab" onclick="switchTab('delete',this)">Delete Device</button>
-  </div>
-
-  <!-- REGISTER -->
-  <div class="panel active" id="panel-register">
-    <div class="card">
-      <div class="card-title">Register a New Device</div>
-      <div class="card-sub">Register your IoT device on the TSE-X network to accept crypto payments.</div>
-      <div class="alert" id="reg-alert"></div>
-
-      <div class="section-label">Device Info</div>
-      <div class="form-group"><label>Device ID *</label><input type="text" id="reg-deviceId" placeholder="e.g. TSE-COFFEE-001 or X402-BIKE-001"><div class="form-hint">Must start with TSE- or X402-</div></div>
-      <div class="form-row">
-        <div class="form-group"><label>Device Name *</label><input type="text" id="reg-deviceName" placeholder="e.g. My Coffee Maker"></div>
-        <div class="form-group"><label>Device Type *</label>
-          <select id="reg-deviceType">
-            <option value="">Select type...</option>
-            <option value="Coffee Machine">Coffee Machine</option>
-            <option value="Bike Lock">Bike Lock</option>
-            <option value="Door Lock">Door Lock</option>
-            <option value="Vending Machine">Vending Machine</option>
-            <option value="EV Charger">EV Charger</option>
-            <option value="Smart Light">Smart Light</option>
-            <option value="IoT Device">Other IoT Device</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Model</label><input type="text" id="reg-model" placeholder="e.g. X402-CM Elite (optional)"></div>
-        <div class="form-group"><label>Firmware Version</label><input type="text" id="reg-firmware" placeholder="e.g. 1.0.0 (optional)"></div>
-      </div>
-
-      <div class="section-label">Payment Wallets</div>
-      <div class="form-hint" style="margin-bottom:12px">Payments will be sent to these wallets. At least one is required.</div>
-      <div class="form-group"><label>Solana Wallet Address</label><input type="text" id="reg-solanaWallet" placeholder="Solana wallet for TSE and USDC (Solana) payments"><div class="form-hint">Required to accept TSE and USDC on Solana</div></div>
-      <div class="form-group"><label>Base Wallet Address</label><input type="text" id="reg-baseWallet" placeholder="0x... Base wallet for USDC (Base) payments"><div class="form-hint">Required to accept USDC on Base</div></div>
-
-      <button class="app-btn app-btn-primary" onclick="registerDevice()" id="reg-btn">Register Device</button>
-
-      <div class="secret-box" id="reg-result" style="display:none">
-        <h3>✅ Device Registered!</h3>
-        <p>Save your Device Secret — you cannot retrieve it later.</p>
-        <div style="margin-bottom:10px"><div class="form-hint" style="margin-bottom:4px">Device ID</div><div class="secret-value"><span id="res-deviceId"></span><button class="copy-btn" onclick="copyEl('res-deviceId')">Copy</button></div></div>
-        <div style="margin-bottom:10px"><div class="form-hint" style="margin-bottom:4px">Device Secret</div><div class="secret-value"><span id="res-secret"></span><button class="copy-btn" onclick="copyEl('res-secret')">Copy</button></div></div>
-        <div class="form-hint" style="margin-bottom:6px">Arduino Code</div>
-        <div class="arduino-code" id="res-arduino"></div>
-        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
-        <div class="form-hint" style="margin-bottom:8px">Arduino User Configuration Section</div>
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Copy this entire block and paste it into the USER CONFIGURATION SECTION of your Arduino sketch, replacing the placeholder values.</p>
-        <div class="arduino-code" id="res-arduino-full" style="font-size:11px;line-height:1.6"></div>
-        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-          <button class="app-btn app-btn-primary" onclick="downloadFullArduinoFile()">⬇ Download Full Arduino File</button>
-          <button class="app-btn app-btn-outline" onclick="downloadArduinoConfig()">⬇ Config Only</button>
-          <button class="app-btn app-btn-outline" onclick="copyArduinoConfig()">Copy Config</button>
-        </div>
-      </div>
-
-      <!-- QR CODE -->
-      <div class="qr-box" id="reg-qr-box" style="display:none">
-        <h3>Device QR Code</h3>
-        <p>Print or display this QR code on your device. Users scan it with the TSE-X app to connect and pay.</p>
-        <div id="qr-canvas"></div>
-        <div class="qr-json" id="qr-json-preview"></div>
-        <div class="qr-actions">
-          <button class="app-btn app-btn-primary" onclick="downloadQR()">Download QR Code</button>
-          <button class="app-btn app-btn-outline" onclick="copyQRJson()">Copy JSON</button>
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-logo">
+        <div class="sidebar-mark">TX</div>
+        <div>
+          <div class="sidebar-title">TSE<span>-X</span></div>
+          <div class="sidebar-sub">Device Registry</div>
         </div>
       </div>
     </div>
-
-    <div class="card" id="reg-prices-card" style="display:none">
-      <div class="card-title">Set Prices (Optional)</div>
-      <div class="card-sub">Add pricing options now or later in Manage Prices. Minimum $0.01 per item.</div>
-      <div id="reg-price-items"></div>
-      <button class="app-btn app-btn-outline" style="margin-bottom:16px" onclick="addPriceItem('reg')">+ Add Price Item</button>
-      <hr class="divider">
-      <button class="app-btn app-btn-primary" onclick="saveRegPrices()" id="reg-prices-btn">Save Prices</button>
-      <div class="alert" id="reg-prices-alert" style="margin-top:12px"></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Overview</div>
+      <div class="nav-item active" onclick="switchPanel('dashboard',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="switchPanel('mydevices',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><path d="M12 17v4"/><path d="M8 21h8"/></svg>
+        My Devices
+        <span class="nav-badge" id="my-devices-count">0</span>
+      </div>
+      <div class="nav-section">Device Management</div>
+      <div class="nav-item" onclick="switchPanel('register',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Register Device
+      </div>
+      <div class="nav-item" onclick="switchPanel('prices',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Manage Prices
+      </div>
+      <div class="nav-item" onclick="switchPanel('lookup',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Lookup Device
+      </div>
+      <div class="nav-section">Danger Zone</div>
+      <div class="nav-item" onclick="switchPanel('delete',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Delete Device
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-box">
+        <div class="user-avatar" id="user-initial">?</div>
+        <div class="user-email" id="user-email-display">Loading...</div>
+        <button class="signout-btn" onclick="doSignOut()" title="Sign Out">⏻</button>
+      </div>
     </div>
   </div>
 
-  <!-- MANAGE PRICES -->
-  <div class="panel" id="panel-prices">
-    <div class="card">
-      <div class="card-title">Manage Device Prices</div>
-      <div class="card-sub">Enter your Device ID and Secret to update pricing.</div>
-      <div class="form-row">
-        <div class="form-group"><label>Device ID *</label><input type="text" id="mgr-deviceId" placeholder="TSE-COFFEE-001"></div>
-        <div class="form-group"><label>Device Secret *</label><input type="password" id="mgr-secret" placeholder="Your 16-char secret"></div>
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+        <div class="security-badge">🔒 Secured Session</div>
       </div>
-      <button class="app-btn app-btn-outline" onclick="loadPrices()" id="load-btn">Load Current Prices</button>
-      <div class="alert" id="mgr-alert" style="margin-top:16px"></div>
-      <div id="mgr-prices-section" style="display:none">
-        <hr class="divider">
-        <div class="card-title" style="margin-bottom:4px">Price Items</div>
-        <div class="card-sub">Minimum price is $0.01 per item.</div>
-        <div id="mgr-price-items"></div>
-        <button class="app-btn app-btn-outline" style="margin-bottom:20px" onclick="addPriceItem('mgr')">+ Add Price Item</button>
-        <hr class="divider">
-        <button class="app-btn app-btn-primary" onclick="updatePrices()" id="update-btn">Update Prices</button>
-        <div class="qr-box" id="mgr-qr-box" style="display:none;margin-top:20px">
-          <h3>Device QR Code</h3>
-          <p>Print or display this QR code on your device so users can scan and pay.</p>
-          <div id="mgr-qr-canvas"></div>
-          <div class="qr-actions" style="margin-top:12px">
-            <button class="app-btn app-btn-primary" onclick="downloadMgrQR()">Download QR Code</button>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="stats-bar" id="stats-bar">
+          <div class="stat-card"><div class="stat-value" id="stat-devices">—</div><div class="stat-label">My Devices</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-prices">—</div><div class="stat-label">Price Tiers Set</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-network">Live</div><div class="stat-label">Network Status</div></div>
+        </div>
+        <div class="card card-accent">
+          <div class="card-title">Welcome to TSE-X Device Registry</div>
+          <div class="card-sub">Manage your IoT devices on the TSE-X DePIN network. Register devices, configure pricing tiers, generate QR codes, and download pre-configured Arduino firmware.</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:8px;">
+            <div onclick="switchPanel('register',document.querySelector('.nav-item:nth-child(4)'))" style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
+              <div style="font-size:24px;margin-bottom:8px;">📡</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">Register Device</div>
+              <div style="font-size:12px;color:var(--text-muted);">Add a new IoT device to the network</div>
+            </div>
+            <div onclick="switchPanel('prices',document.querySelector('.nav-item:nth-child(5)'))" style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
+              <div style="font-size:24px;margin-bottom:8px;">💲</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">Set Pricing</div>
+              <div style="font-size:12px;color:var(--text-muted);">Configure multi-tier pricing for users</div>
+            </div>
+            <div onclick="switchPanel('mydevices',document.querySelector('.nav-item:nth-child(3)'))" style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
+              <div style="font-size:24px;margin-bottom:8px;">🗂️</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">My Devices</div>
+              <div style="font-size:12px;color:var(--text-muted);">View all your registered devices</div>
+            </div>
+            <div onclick="switchPanel('lookup',document.querySelector('.nav-item:nth-child(6)'))" style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
+              <div style="font-size:24px;margin-bottom:8px;">🔍</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">Lookup Device</div>
+              <div style="font-size:12px;color:var(--text-muted);">Search and view any device</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Security Info</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;">
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green);margin-bottom:6px;">🔒 Auth Protected</div>
+              <div style="font-size:12px;color:var(--text-muted);">All management actions require your TSE-X account login via Firebase Auth.</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">🔑 Secret Key Required</div>
+              <div style="font-size:12px;color:var(--text-muted);">Price updates and deletions require your device secret key. Store it safely — it cannot be recovered.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY DEVICES -->
+      <div class="panel" id="panel-mydevices">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Registered in this browser</div>
+          </div>
+          <button class="app-btn app-btn-outline" onclick="switchPanel('register',document.querySelector('.nav-item:nth-child(4)'))">+ Register New</button>
+        </div>
+        <div class="device-grid" id="my-devices-grid">
+          <div class="empty-state" id="my-devices-empty">
+            <div class="empty-icon">📡</div>
+            <div class="empty-title">No Devices Yet</div>
+            <div class="empty-sub">Register your first device to see it here.<br>Devices are tracked in your browser.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="panel" id="panel-register">
+        <div class="card card-accent">
+          <div class="card-title">Register New Device</div>
+          <div class="card-sub">Register your IoT device on the TSE-X DePIN network to accept crypto payments.</div>
+          <div class="alert" id="reg-alert"></div>
+
+          <div class="section-label">Device Identity</div>
+          <div class="fg"><label>Device ID *</label><input type="text" id="reg-deviceId" placeholder="e.g. TSE-COFFEE-001 or X402-BIKE-001"><div class="fhint">Must start with TSE- or X402-. No spaces allowed.</div></div>
+          <div class="form-row">
+            <div class="fg"><label>Device Name *</label><input type="text" id="reg-deviceName" placeholder="e.g. My Coffee Maker"></div>
+            <div class="fg"><label>Device Type *</label>
+              <select id="reg-deviceType">
+                <option value="">Select type...</option>
+                <option value="Coffee Machine">Coffee Machine</option>
+                <option value="Bike Lock">Bike Lock</option>
+                <option value="Door Lock">Door Lock</option>
+                <option value="Vending Machine">Vending Machine</option>
+                <option value="EV Charger">EV Charger</option>
+                <option value="Smart Light">Smart Light</option>
+                <option value="IoT Device">Other IoT Device</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label>Model</label><input type="text" id="reg-model" placeholder="Optional, e.g. BL-100"></div>
+            <div class="fg"><label>Firmware Version</label><input type="text" id="reg-firmware" placeholder="Optional, e.g. 1.0.0"></div>
+          </div>
+
+          <div class="section-label">Payment Wallets</div>
+          <div style="background:var(--blue-glow);border:1px solid rgba(36,81,209,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#93b4ff;">At least one wallet address is required. Payments from users will be sent directly to these wallets.</div>
+          <div class="fg"><label>Solana Wallet Address</label><input type="text" id="reg-solanaWallet" placeholder="For TSE token and USDC on Solana"><div class="fhint">Enables TSE token and Solana USDC payments</div></div>
+          <div class="fg"><label>Base Wallet Address (0x...)</label><input type="text" id="reg-baseWallet" placeholder="0x... for USDC on Base"><div class="fhint">Enables USDC payments on the Base network</div></div>
+
+          <button class="app-btn app-btn-primary" style="margin-top:8px;padding:12px 24px;font-size:14px;" onclick="registerDevice()" id="reg-btn">Register Device</button>
+
+          <!-- RESULT -->
+          <div class="secret-box" id="reg-result" style="display:none">
+            <div class="secret-box-title">✓ Device Registered</div>
+            <div class="secret-box-sub">Save your Device Secret — it cannot be retrieved later. You will need it to update prices or delete the device.</div>
+            <div class="secret-row"><div class="secret-label">Device ID</div><div class="secret-value"><span class="secret-text" id="res-deviceId"></span><button class="copy-btn" onclick="copyEl('res-deviceId')">Copy</button></div></div>
+            <div class="secret-row"><div class="secret-label">Device Secret</div><div class="secret-value"><span class="secret-text" id="res-secret"></span><button class="copy-btn" onclick="copyEl('res-secret')">Copy</button></div></div>
+            <div class="secret-label" style="margin-top:12px;margin-bottom:6px;">Arduino Code Snippet</div>
+            <div class="arduino-code" id="res-arduino"></div>
+          </div>
+
+          <!-- ARDUINO DOWNLOAD -->
+          <div id="reg-arduino-section" style="display:none;margin-top:12px;">
+            <div class="secret-label" style="margin-bottom:8px;">Full Arduino Configuration</div>
+            <div class="arduino-code" id="res-arduino-full" style="font-size:11px;max-height:200px;overflow-y:auto;"></div>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+              <button class="app-btn app-btn-primary" onclick="downloadFullArduinoFile()" id="dl-arduino-btn">⬇ Download Full Arduino File</button>
+              <button class="app-btn app-btn-outline" onclick="downloadArduinoConfig()">⬇ Config Only</button>
+              <button class="app-btn app-btn-outline" onclick="copyArduinoConfig()">Copy Config</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR CODE (shown after registration) -->
+        <div class="card" id="reg-qr-box" style="display:none">
+          <div class="card-title">Device QR Code</div>
+          <div class="card-sub">Print or display this QR code on your physical device. Users scan it with the TSE-X app to connect and pay.</div>
+          <div style="text-align:center;padding:8px 0;">
+            <div class="qr-canvas-wrap"><div id="qr-canvas"></div></div>
+          </div>
+          <details style="margin-bottom:14px;">
+            <summary style="font-size:12px;color:var(--text-muted);cursor:pointer;font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:11px;">View QR Data JSON</summary>
+            <div class="qr-json" id="qr-json-preview" style="margin-top:8px;"></div>
+          </details>
+          <div class="qr-actions">
+            <button class="app-btn app-btn-primary" onclick="downloadQR()">⬇ Download QR Code</button>
+            <button class="app-btn app-btn-outline" onclick="copyQRJson()">Copy JSON</button>
+          </div>
+        </div>
+
+        <!-- SET PRICES -->
+        <div class="card" id="reg-prices-card" style="display:none">
+          <div class="card-title">Set Pricing Tiers</div>
+          <div class="card-sub">Add pricing options now or configure them later in Manage Prices. Minimum price is $0.01 per item.</div>
+          <div id="reg-price-items"></div>
+          <button class="app-btn app-btn-outline" style="margin-bottom:16px;" onclick="addPriceItem('reg')">+ Add Price Tier</button>
+          <hr class="divider">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="app-btn app-btn-primary" onclick="saveRegPrices()" id="reg-prices-btn">Save Pricing</button>
+            <div class="alert" id="reg-prices-alert" style="margin:0;flex:1;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANAGE PRICES -->
+      <div class="panel" id="panel-prices">
+        <div class="card card-accent">
+          <div class="card-title">Manage Device Pricing</div>
+          <div class="card-sub">Enter your Device ID and Secret Key to load and update pricing tiers.</div>
+          <div class="form-row">
+            <div class="fg"><label>Device ID *</label><input type="text" id="mgr-deviceId" placeholder="e.g. TSE-COFFEE-001"></div>
+            <div class="fg"><label>Device Secret Key *</label><input type="password" id="mgr-secret" placeholder="Your 16-character secret"></div>
+          </div>
+          <button class="app-btn app-btn-primary" onclick="loadPrices()" id="load-btn">Load Device</button>
+          <div class="alert" id="mgr-alert" style="margin-top:14px;"></div>
+
+          <div id="mgr-prices-section" style="display:none">
+            <hr class="divider">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div class="card-title" style="margin:0;">Pricing Tiers</div>
+              <div style="font-size:12px;color:var(--text-muted);">Min $0.01 per item</div>
+            </div>
+            <div id="mgr-price-items"></div>
+            <button class="app-btn app-btn-outline" style="margin-bottom:20px;" onclick="addPriceItem('mgr')">+ Add Price Tier</button>
+            <hr class="divider">
+            <button class="app-btn app-btn-primary" onclick="updatePrices()" id="update-btn">Save Changes</button>
+          </div>
+        </div>
+
+        <!-- MANAGE QR (shown after loading) -->
+        <div class="card" id="mgr-qr-box" style="display:none">
+          <div class="card-title">Device QR Code</div>
+          <div class="card-sub">Current QR code for this device based on registered wallet addresses.</div>
+          <div style="text-align:center;padding:8px 0;">
+            <div class="qr-canvas-wrap"><div id="mgr-qr-canvas"></div></div>
+          </div>
+          <div class="qr-actions">
+            <button class="app-btn app-btn-primary" onclick="downloadMgrQR()">⬇ Download QR Code</button>
             <button class="app-btn app-btn-outline" onclick="downloadMgrArduinoFile()">⬇ Download Arduino File</button>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- LOOKUP -->
-  <div class="panel" id="panel-lookup">
-    <div class="card">
-      <div class="card-title">Look Up Device</div>
-      <div class="card-sub">View any registered device, its pricing, and regenerate its QR code.</div>
-      <div style="display:flex;gap:10px;margin-bottom:16px">
-        <input type="text" id="lkp-deviceId" placeholder="Enter Device ID e.g. TSE-COFFEE-001" style="flex:1" onkeydown="if(event.key==='Enter')lookupDevice()">
-        <button class="app-btn app-btn-primary" onclick="lookupDevice()">Look Up</button>
-      </div>
-      <div class="alert" id="lkp-alert"></div>
-      <div class="device-info" id="lkp-result">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-          <div class="card-title" id="lkp-name"></div>
-          <div class="device-badge" id="lkp-badge"></div>
+      <!-- LOOKUP -->
+      <div class="panel" id="panel-lookup">
+        <div class="card card-accent">
+          <div class="card-title">Device Lookup</div>
+          <div class="card-sub">Search any registered device by ID. No secret key required — this is public information.</div>
+          <div style="display:flex;gap:10px;margin-bottom:4px;">
+            <input type="text" id="lkp-deviceId" placeholder="Enter Device ID e.g. TSE-COFFEE-001" style="flex:1;" onkeydown="if(event.key==='Enter')lookupDevice()">
+            <button class="app-btn app-btn-primary" onclick="lookupDevice()" style="white-space:nowrap;">Look Up</button>
+          </div>
+          <div class="alert" id="lkp-alert" style="margin-top:12px;"></div>
         </div>
-        <div class="form-hint" id="lkp-id" style="margin-bottom:16px"></div>
-        <div id="lkp-prices-list"></div>
+
+        <div class="lookup-result" id="lkp-result">
+          <div class="lookup-header">
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);margin-bottom:4px;" id="lkp-id-display"></div>
+              <div class="lookup-name" id="lkp-name"></div>
+            </div>
+            <div class="device-type-badge" id="lkp-badge" style="margin-left:auto;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;" id="lkp-wallet-info"></div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Pricing Tiers</div>
+          <div id="lkp-prices-list"></div>
+        </div>
+
+        <div class="card" id="lkp-qr-box" style="display:none">
+          <div class="card-title">Device QR Code</div>
+          <div class="card-sub">Scan with TSE-X app to connect to this device.</div>
+          <div style="text-align:center;padding:8px 0;">
+            <div class="qr-canvas-wrap"><div id="lkp-qr-canvas"></div></div>
+          </div>
+          <div class="qr-actions">
+            <button class="app-btn app-btn-primary" onclick="downloadLkpQR()">⬇ Download QR Code</button>
+          </div>
+        </div>
       </div>
 
-      <!-- LOOKUP QR -->
-      <div class="lookup-qr-box" id="lkp-qr-box">
-        <h3 style="font-size:14px;font-weight:600;color:var(--teal);margin-bottom:4px;">Device QR Code</h3>
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Scan with TSE-X app to connect to this device.</p>
-        <div id="lkp-qr-canvas"></div>
-        <div class="qr-actions" style="margin-top:12px">
-          <button class="app-btn app-btn-primary" onclick="downloadLkpQR()">Download QR Code</button>
-        </div>
-        <div style="margin-top:12px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-muted);">
-          Note: QR code uses saved wallet addresses. If wallets were not set at registration, update them via your Arduino or contact support.
+      <!-- DELETE -->
+      <div class="panel" id="panel-delete">
+        <div class="card" style="border-color:rgba(239,68,68,.2);">
+          <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;color:#fca5a5;display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-size:16px;flex-shrink:0;">⚠️</span>
+            <div><strong style="display:block;margin-bottom:2px;">Permanent Action</strong>Deleting a device removes it from the TSE-X network. The Device ID becomes available for re-registration. Any Arduino hardware using the old secret will need to be re-configured.</div>
+          </div>
+          <div class="card-title">Delete Device</div>
+          <div class="card-sub">All three fields are required. This action cannot be undone.</div>
+          <div class="alert" id="del-alert"></div>
+          <div class="fg"><label>Device ID *</label><input type="text" id="del-deviceId" placeholder="e.g. TSE-COFFEE-001"></div>
+          <div class="fg"><label>Device Secret Key *</label><input type="password" id="del-secret" placeholder="Your 16-character secret key"><div class="fhint">The secret key you received when you registered this device</div></div>
+          <div class="fg"><label>Confirm Device ID *</label><input type="text" id="del-confirm" placeholder="Type the Device ID again to confirm"><div class="fhint">Must match exactly to prevent accidental deletion</div></div>
+          <button class="app-btn app-btn-danger" style="margin-top:8px;padding:12px 24px;font-size:14px;" onclick="deleteDevice()" id="del-btn">Permanently Delete Device</button>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-  <!-- DELETE DEVICE -->
-  <div class="panel" id="panel-delete">
-    <div class="card">
-      <div class="card-title">Delete Device</div>
-      <div class="card-sub">Permanently removes the device from the TSE-X network. This cannot be undone.</div>
-      <div class="alert alert-error show" style="margin-bottom:20px">⚠️ Warning: Deleting a device is permanent. The Device ID will become available for re-registration. Any connected hardware using the old secret will stop working.</div>
-      <div class="alert" id="del-alert"></div>
-      <div class="form-group"><label>Device ID *</label><input type="text" id="del-deviceId" placeholder="e.g. TSE-COFFEE-001"></div>
-      <div class="form-group"><label>Device Secret *</label><input type="password" id="del-secret" placeholder="Your 16-char secret key"><div class="form-hint">The secret you received when you registered this device</div></div>
-      <div class="form-group"><label>Confirm Device ID *</label><input type="text" id="del-confirm" placeholder="Type the Device ID again to confirm"><div class="form-hint">Must match exactly to prevent accidental deletion</div></div>
-      <button class="app-btn app-btn-danger" style="margin-top:8px;padding:11px 20px;font-size:14px" onclick="deleteDevice()" id="del-btn">Permanently Delete Device</button>
-    </div>
-  </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app-screen -->
 
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- Firebase -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, OAuthProvider, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
@@ -368,8 +656,12 @@ const ap = new OAuthProvider('apple.com');
 onAuthStateChanged(auth, u => {
   if (u) {
     document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'block';
-    document.getElementById('user-email').textContent = u.email || u.displayName || '';
+    document.getElementById('app-screen').style.display = 'flex';
+    const email = u.email || u.displayName || '';
+    document.getElementById('user-email-display').textContent = email;
+    document.getElementById('user-initial').textContent = (email[0] || '?').toUpperCase();
+    window._uid = u.uid;
+    loadMyDevices();
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display = 'none';
@@ -386,131 +678,262 @@ let currentQRData = null;
 let currentLkpQRData = null;
 const pc = { reg:0, mgr:0 };
 
-// AUTH
+// ===== TOAST =====
+function toast(msg, type='info') {
+  const icons = {success:'✓',error:'✕',info:'ℹ'};
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ'}</span><span class="toast-text">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.style.opacity='0', 3500);
+  setTimeout(() => el.remove(), 3800);
+}
+
+// ===== AUTH =====
 function setAuthTab(mode, el) {
   authMode = mode;
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('auth-btn').textContent = mode === 'login' ? 'Log In' : 'Create Account';
+  document.getElementById('auth-btn').textContent = mode === 'login' ? 'Sign In' : 'Create Account';
   document.getElementById('forgot-btn').style.display = mode === 'login' ? 'block' : 'none';
   hideAuthAlerts();
 }
-function hideAuthAlerts() { document.getElementById('auth-err').className='auth-alert auth-error'; document.getElementById('auth-ok').className='auth-alert auth-success-msg'; }
-function showAuthErr(m) { const e=document.getElementById('auth-err'); e.className='auth-alert auth-error show'; e.textContent=m; }
-function showAuthOk(m) { const e=document.getElementById('auth-ok'); e.className='auth-alert auth-success-msg show'; e.textContent=m; }
-const errMap = {'auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password.','auth/email-already-in-use':'An account with this email already exists.','auth/invalid-email':'Please enter a valid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/popup-closed-by-user':'Sign-in popup was closed.','auth/invalid-credential':'Invalid email or password.'};
+function hideAuthAlerts() { document.getElementById('auth-err').className='auth-alert auth-err'; document.getElementById('auth-ok').className='auth-alert auth-ok'; }
+function showAuthErr(m) { const e=document.getElementById('auth-err'); e.className='auth-alert auth-err show'; e.textContent=m; }
+function showAuthOk(m) { const e=document.getElementById('auth-ok'); e.className='auth-alert auth-ok show'; e.textContent=m; }
+const errMap = {'auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password.','auth/email-already-in-use':'An account with this email already exists.','auth/invalid-email':'Please enter a valid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/popup-closed-by-user':'Sign-in cancelled.','auth/invalid-credential':'Invalid email or password.'};
 
 async function authSubmit() {
   const email=document.getElementById('auth-email').value.trim();
   const pw=document.getElementById('auth-pw').value;
   hideAuthAlerts();
   if(!email||!pw) return showAuthErr('Please enter your email and password.');
-  const btn=document.getElementById('auth-btn'); btn.disabled=true; btn.textContent='...';
+  const btn=document.getElementById('auth-btn'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>';
   try {
     const a=window._a;
     if(authMode==='login') await a.signInWithEmailAndPassword(a.auth,email,pw);
     else await a.createUserWithEmailAndPassword(a.auth,email,pw);
-  } catch(e){ showAuthErr(errMap[e.code]||'Sign-in failed. Please try again.'); }
-  finally { btn.disabled=false; btn.textContent=authMode==='login'?'Log In':'Create Account'; }
+  } catch(e){ showAuthErr(errMap[e.code]||'Authentication failed. Please try again.'); }
+  finally { btn.disabled=false; btn.textContent=authMode==='login'?'Sign In':'Create Account'; }
 }
 async function signInGoogle(){ hideAuthAlerts(); try{ await window._a.signInWithPopup(window._a.auth,window._a.gp); }catch(e){ showAuthErr(errMap[e.code]||e.message); } }
 async function signInApple(){ hideAuthAlerts(); try{ await window._a.signInWithPopup(window._a.auth,window._a.ap); }catch(e){ showAuthErr(errMap[e.code]||e.message); } }
 async function forgotPassword(){
   const email=document.getElementById('auth-email').value.trim(); hideAuthAlerts();
   if(!email) return showAuthErr('Enter your email address first.');
-  try{ await window._a.sendPasswordResetEmail(window._a.auth,email); showAuthOk('Password reset email sent. Check your inbox.'); }
+  try{ await window._a.sendPasswordResetEmail(window._a.auth,email); showAuthOk('Password reset email sent.'); }
   catch(e){ showAuthErr(errMap[e.code]||e.message); }
 }
 function doSignOut(){ window._a.signOut(window._a.auth); }
 
-// NAVIGATION
-function switchTab(tab,el){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('panel-'+tab).classList.add('active');
+// ===== NAVIGATION =====
+const panelTitles = {dashboard:'Dashboard',mydevices:'My Devices',register:'Register Device',prices:'Manage Prices',lookup:'Device Lookup',delete:'Delete Device'};
+function switchPanel(panel, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('panel-'+panel).classList.add('active');
+  document.getElementById('topbar-title').textContent = panelTitles[panel] || panel;
 }
-function copyEl(id){
-  navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{
+
+// ===== MY DEVICES (localStorage) =====
+function getMyDevices() {
+  const uid = window._uid || 'anon';
+  try { return JSON.parse(localStorage.getItem('tsex_devices_'+uid) || '[]'); } catch { return []; }
+}
+function saveMyDevice(device) {
+  const uid = window._uid || 'anon';
+  const devices = getMyDevices();
+  const existing = devices.findIndex(d => d.deviceId === device.deviceId);
+  if(existing >= 0) devices[existing] = device;
+  else devices.unshift(device);
+  localStorage.setItem('tsex_devices_'+uid, JSON.stringify(devices));
+  loadMyDevices();
+}
+function removeMyDevice(deviceId) {
+  const uid = window._uid || 'anon';
+  const devices = getMyDevices().filter(d => d.deviceId !== deviceId);
+  localStorage.setItem('tsex_devices_'+uid, JSON.stringify(devices));
+  loadMyDevices();
+}
+
+function loadMyDevices() {
+  const devices = getMyDevices();
+  const count = devices.length;
+  document.getElementById('my-devices-count').textContent = count;
+  document.getElementById('stat-devices').textContent = count;
+  const grid = document.getElementById('my-devices-grid');
+  const empty = document.getElementById('my-devices-empty');
+
+  if(count === 0) {
+    grid.innerHTML = '';
+    grid.appendChild(empty);
+    empty.style.display = 'block';
+    document.getElementById('stat-prices').textContent = '—';
+    return;
+  }
+
+  empty.style.display = 'none';
+  let totalPrices = 0;
+  grid.innerHTML = devices.map(d => {
+    if(d.priceCount) totalPrices += d.priceCount;
+    const typeClass = d.deviceType?.toLowerCase().includes('bike')?'badge-bike':d.deviceType?.toLowerCase().includes('coffee')?'badge-coffee':d.deviceType?.toLowerCase().includes('lock')?'badge-lock':d.deviceType?.toLowerCase().includes('vending')?'badge-vending':'badge-other';
+    const date = d.registeredAt ? new Date(d.registeredAt).toLocaleDateString() : '';
+    return `<div class="device-card" onclick="openDeviceFromMyDevices('${d.deviceId}')">
+      <div class="device-card-id">${d.deviceId}</div>
+      <div class="device-card-name">${d.deviceName||d.deviceId}</div>
+      <div class="device-card-type">${d.deviceType||'IoT Device'}</div>
+      <div class="device-card-meta">
+        <span class="device-type-badge ${typeClass}">${d.deviceType||'Device'}</span>
+        <span class="device-card-date">${date}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('stat-prices').textContent = totalPrices || '—';
+}
+
+function openDeviceFromMyDevices(deviceId) {
+  document.getElementById('mgr-deviceId').value = deviceId;
+  switchPanel('prices', document.querySelector('.nav-item:nth-child(5)'));
+  toast('Enter your secret key to manage '+deviceId, 'info');
+}
+
+// ===== UTILS =====
+function copyEl(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
     const b=event.target; b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy',1500);
   });
 }
-function showAlert(id,type,msg){ const e=document.getElementById(id); e.className='alert show alert-'+type; e.textContent=msg; }
+function showAlert(id,type,msg) {
+  const e=document.getElementById(id);
+  e.className='alert show alert-'+type;
+  e.innerHTML=`<span>${msg}</span>`;
+}
 function hideAlert(id){ document.getElementById(id).className='alert'; }
 
-// QR CODE GENERATION
+// ===== QR CODE =====
 function generateQR(containerId, jsonData) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
-  const jsonStr = JSON.stringify(jsonData);
-  new QRCode(container, {
-    text: jsonStr,
-    width: 200,
-    height: 200,
-    colorDark: '#000000',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
-  return jsonStr;
+  const container=document.getElementById(containerId);
+  container.innerHTML='';
+  new QRCode(container,{text:JSON.stringify(jsonData),width:200,height:200,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  return JSON.stringify(jsonData);
+}
+function buildQRData(deviceId,deviceName,deviceType,model,firmwareVersion,solanaWallet,baseWallet) {
+  const chains=[];
+  if(solanaWallet) chains.push({chain:'solana',wallet:solanaWallet});
+  if(baseWallet) chains.push({chain:'base',wallet:baseWallet});
+  return {deviceId,deviceName,deviceType,model:model||'',firmwareVersion:firmwareVersion||'1.0.0',chains};
+}
+function downloadQR(){
+  const canvas=document.querySelector('#qr-canvas canvas'); if(!canvas) return;
+  const link=document.createElement('a'); link.download=`TSE-X-QR-${document.getElementById('res-deviceId').textContent||'device'}.png`; link.href=canvas.toDataURL('image/png'); link.click();
+}
+function downloadLkpQR(){
+  const canvas=document.querySelector('#lkp-qr-canvas canvas'); if(!canvas) return;
+  const deviceId=document.getElementById('lkp-deviceId').value.trim()||'device';
+  const link=document.createElement('a'); link.download=`TSE-X-QR-${deviceId}.png`; link.href=canvas.toDataURL('image/png'); link.click();
+}
+function downloadMgrQR(){
+  const canvas=document.querySelector('#mgr-qr-canvas canvas'); if(!canvas) return;
+  const link=document.createElement('a'); link.download=`TSE-X-QR-${window._mgrDeviceId||'device'}.png`; link.href=canvas.toDataURL('image/png'); link.click();
+}
+function copyQRJson(){
+  if(!currentQRData) return;
+  navigator.clipboard.writeText(JSON.stringify(currentQRData)).then(()=>{const b=event.target;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy JSON',1500);});
 }
 
-function buildQRData(deviceId, deviceName, deviceType, model, firmwareVersion, solanaWallet, baseWallet) {
-  const chains = [];
-  if (solanaWallet) chains.push({ chain: 'solana', wallet: solanaWallet });
-  if (baseWallet) chains.push({ chain: 'base', wallet: baseWallet });
-  return { deviceId, deviceName, deviceType, model: model || '', firmwareVersion: firmwareVersion || '1.0.0', chains };
+// ===== ARDUINO =====
+function generateArduinoConfig(deviceId,deviceSecret,deviceName,solanaWallet,baseWallet) {
+  return `// ╔══════════════════════════════════════════════════╗
+// ║        USER CONFIGURATION SECTION               ║
+// ║  Update these values for YOUR device!            ║
+// ╚══════════════════════════════════════════════════╝
+
+#define DEVICE_ID        "${deviceId}"
+#define DEVICE_SECRET    "${deviceSecret}"
+#define DEVICE_NAME      "${deviceName}"
+#define SOLANA_WALLET    "${solanaWallet}"
+#define BASE_WALLET      "${baseWallet}"`;
 }
 
-function downloadQR() {
-  const canvas = document.querySelector('#qr-canvas canvas');
-  if (!canvas) return;
-  const deviceId = document.getElementById('res-deviceId').textContent || 'device';
-  const link = document.createElement('a');
-  link.download = `TSE-X-QR-${deviceId}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+async function downloadFullArduinoFile() {
+  const deviceId=document.getElementById('res-deviceId').textContent.trim();
+  const deviceSecret=document.getElementById('res-secret').textContent.trim();
+  const deviceName=document.getElementById('reg-deviceName').value.trim();
+  const solanaWallet=document.getElementById('reg-solanaWallet').value.trim();
+  const baseWallet=document.getElementById('reg-baseWallet').value.trim();
+  const btn=event.target; btn.innerHTML='<span class="spinner"></span> Fetching...'; btn.disabled=true;
+  try {
+    const res=await fetch('https://raw.githubusercontent.com/TSE-Sol/tse-x-arduino-library/main/examples/BikeLock/BikeLock.ino');
+    if(!res.ok) throw new Error('Could not fetch from GitHub');
+    let content=await res.text();
+    content=content.replace(/"YOUR_DEVICE_ID"/g,`"${deviceId}"`).replace(/"YOUR_DEVICE_SECRET"/g,`"${deviceSecret}"`).replace(/"YOUR_DEVICE_NAME"/g,`"${deviceName}"`).replace(/"YOUR_SOLANA_WALLET_ADDRESS"/g,`"${solanaWallet}"`).replace(/"YOUR_BASE_WALLET_ADDRESS"/g,`"${baseWallet}"`).replace(/"YOUR_DEVICE_MODEL"/g,'"'+document.getElementById('reg-model').value.trim()+'"').replace(/"YOUR_FIRMWARE_VERSION"/g,'"'+document.getElementById('reg-firmware').value.trim()+'"');
+    const blob=new Blob([content],{type:'text/plain'});
+    const link=document.createElement('a'); link.download=`BikeLock-${deviceId}.ino`; link.href=URL.createObjectURL(blob); link.click(); URL.revokeObjectURL(link.href);
+    btn.textContent='✓ Downloaded!'; setTimeout(()=>{btn.innerHTML='⬇ Download Full Arduino File';btn.disabled=false;},2000);
+    toast('Arduino file downloaded', 'success');
+  } catch(err) {
+    showAlert('reg-alert','error','Could not fetch Arduino file: '+err.message);
+    btn.innerHTML='⬇ Download Full Arduino File'; btn.disabled=false;
+  }
+}
+async function downloadMgrArduinoFile() {
+  const deviceId=document.getElementById('mgr-deviceId').value.trim().toUpperCase();
+  if(!window._mgrQRData) return toast('Load a device first', 'error');
+  const btn=event.target; btn.innerHTML='<span class="spinner"></span>'; btn.disabled=true;
+  try {
+    const res=await fetch('https://raw.githubusercontent.com/TSE-Sol/tse-x-arduino-library/main/examples/BikeLock/BikeLock.ino');
+    if(!res.ok) throw new Error('Could not fetch from GitHub');
+    let content=await res.text();
+    const qr=window._mgrQRData;
+    const sol=qr.chains?.find(c=>c.chain==='solana')?.wallet||'';
+    const base=qr.chains?.find(c=>c.chain==='base')?.wallet||'';
+    const secret=document.getElementById('mgr-secret').value.trim();
+    content=content.replace(/"YOUR_DEVICE_ID"/g,`"${deviceId}"`).replace(/"YOUR_DEVICE_SECRET"/g,`"${secret}"`).replace(/"YOUR_DEVICE_NAME"/g,`"${qr.deviceName||deviceId}"`).replace(/"YOUR_SOLANA_WALLET_ADDRESS"/g,`"${sol}"`).replace(/"YOUR_BASE_WALLET_ADDRESS"/g,`"${base}"`);
+    const blob=new Blob([content],{type:'text/plain'});
+    const link=document.createElement('a'); link.download=`BikeLock-${deviceId}.ino`; link.href=URL.createObjectURL(blob); link.click(); URL.revokeObjectURL(link.href);
+    btn.textContent='✓'; setTimeout(()=>{btn.innerHTML='⬇ Download Arduino File';btn.disabled=false;},2000);
+    toast('Arduino file downloaded', 'success');
+  } catch(err) {
+    toast('Could not fetch Arduino file: '+err.message, 'error');
+    btn.innerHTML='⬇ Download Arduino File'; btn.disabled=false;
+  }
+}
+function downloadArduinoConfig() {
+  const config=document.getElementById('res-arduino-full').textContent;
+  const deviceId=document.getElementById('res-deviceId').textContent||'device';
+  const blob=new Blob([config],{type:'text/plain'});
+  const link=document.createElement('a'); link.download=`TSE-X-Config-${deviceId}.ino`; link.href=URL.createObjectURL(blob); link.click();
+}
+function copyArduinoConfig() {
+  navigator.clipboard.writeText(document.getElementById('res-arduino-full').textContent).then(()=>{const b=event.target;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy Config',1500);});
 }
 
-function downloadLkpQR() {
-  const canvas = document.querySelector('#lkp-qr-canvas canvas');
-  if (!canvas) return;
-  const deviceId = document.getElementById('lkp-deviceId').value.trim() || 'device';
-  const link = document.createElement('a');
-  link.download = `TSE-X-QR-${deviceId}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-}
-
-function copyQRJson() {
-  if (!currentQRData) return;
-  navigator.clipboard.writeText(JSON.stringify(currentQRData)).then(() => {
-    const b = event.target; b.textContent = 'Copied!'; setTimeout(() => b.textContent = 'Copy JSON', 1500);
-  });
-}
-
-// PRICE ITEM HTML
-function priceItemHtml(pfx,i,item={}){
+// ===== PRICE ITEMS =====
+function priceItemHtml(pfx,i,item={}) {
   return `<div class="price-item" id="${pfx}-item-${i}">
-    <div class="price-item-header"><span class="price-item-num">Item ${i+1}</span><button class="app-btn app-btn-danger app-btn-sm" onclick="rmPrice('${pfx}',${i})">Remove</button></div>
-    <div class="form-group"><label>Name *</label><input type="text" id="${pfx}-name-${i}" placeholder="e.g. 30 Minute Unlock" value="${item.name||''}"></div>
-    <div class="form-group"><label>Description</label><input type="text" id="${pfx}-desc-${i}" placeholder="Optional" value="${item.description||''}"></div>
+    <div class="price-item-header">
+      <span class="price-num">Tier ${i+1}</span>
+      <button class="app-btn app-btn-danger app-btn-sm" onclick="rmPrice('${pfx}',${i})">Remove</button>
+    </div>
+    <div class="fg"><label>Name *</label><input type="text" id="${pfx}-name-${i}" placeholder="e.g. 30 Minute Unlock" value="${item.name||''}"></div>
+    <div class="fg"><label>Description</label><input type="text" id="${pfx}-desc-${i}" placeholder="Optional description" value="${item.description||''}"></div>
     <div class="price-grid">
-      <div class="form-group"><label>Price (USD) *</label><input type="number" id="${pfx}-price-${i}" placeholder="0.15" min="0.01" step="0.01" value="${item.priceUsd||''}"></div>
-      <div class="form-group"><label>Duration (min)</label><input type="number" id="${pfx}-duration-${i}" placeholder="Optional" min="1" value="${item.duration||''}"></div>
-      <div class="form-group"><label>Image URL</label><input type="text" id="${pfx}-image-${i}" placeholder="https://..." value="${item.image||''}"></div>
+      <div class="fg"><label>Price (USD) *</label><input type="number" id="${pfx}-price-${i}" placeholder="0.15" min="0.01" step="0.01" value="${item.priceUsd||''}"></div>
+      <div class="fg"><label>Duration (min)</label><input type="number" id="${pfx}-duration-${i}" placeholder="Optional" min="1" value="${item.duration||''}"></div>
+      <div class="fg"><label>Image URL</label><input type="text" id="${pfx}-image-${i}" placeholder="https://..." value="${item.image||''}"></div>
     </div>
   </div>`;
 }
 function addPriceItem(pfx){ document.getElementById(pfx+'-price-items').insertAdjacentHTML('beforeend',priceItemHtml(pfx,pc[pfx])); pc[pfx]++; }
 function rmPrice(pfx,i){ document.getElementById(pfx+'-item-'+i)?.remove(); }
-
-function collectPrices(pfx,alertId){
+function collectPrices(pfx,alertId) {
   const prices=[];
   for(let i=0;i<pc[pfx];i++){
     const ne=document.getElementById(pfx+'-name-'+i); if(!ne) continue;
     const name=ne.value.trim(); if(!name) continue;
     const priceUsd=parseFloat(document.getElementById(pfx+'-price-'+i).value);
-    if(!priceUsd||priceUsd<0.01){ showAlert(alertId,'error',`"${name}": price must be at least $0.01`); return null; }
+    if(!priceUsd||priceUsd<0.01){showAlert(alertId,'error',`"${name}": price must be at least $0.01`);return null;}
     const dur=document.getElementById(pfx+'-duration-'+i).value;
     const img=document.getElementById(pfx+'-image-'+i).value.trim();
     const desc=document.getElementById(pfx+'-desc-'+i).value.trim();
@@ -519,85 +942,7 @@ function collectPrices(pfx,alertId){
   return prices;
 }
 
-// ARDUINO CONFIG GENERATION
-function generateArduinoConfig(deviceId, deviceSecret, deviceName, solanaWallet, baseWallet) {
-  return `// ╔══════════════════════════════════════════════╗
-// ║         USER CONFIGURATION SECTION          ║
-// ║     Update these values for YOUR device!     ║
-// ╚══════════════════════════════════════════════╝
-
-// Device Identity
-#define DEVICE_ID        "${deviceId}"
-#define DEVICE_SECRET    "${deviceSecret}"
-
-// Device Display Name (shown in app)
-#define DEVICE_NAME      "${deviceName}"
-
-// Wallet addresses for receiving payments
-#define SOLANA_WALLET    "${solanaWallet}"
-#define BASE_WALLET      "${baseWallet}"`;
-}
-
-async function downloadFullArduinoFile() {
-  const deviceId = document.getElementById('res-deviceId').textContent.trim();
-  const deviceSecret = document.getElementById('res-secret').textContent.trim();
-  const deviceName = document.getElementById('reg-deviceName').value.trim();
-  const solanaWallet = document.getElementById('reg-solanaWallet').value.trim();
-  const baseWallet = document.getElementById('reg-baseWallet').value.trim();
-
-  const btn = event.target;
-  btn.textContent = '⏳ Fetching file...';
-  btn.disabled = true;
-
-  try {
-    const res = await fetch('https://raw.githubusercontent.com/TSE-Sol/tse-x-arduino-library/main/examples/BikeLock/BikeLock.ino');
-    if (!res.ok) throw new Error('Could not fetch BikeLock.ino from GitHub');
-    let content = await res.text();
-
-    // Replace all placeholders with registered values
-    content = content.replace(/"YOUR_DEVICE_ID"/g, `"${deviceId}"`);
-    content = content.replace(/"YOUR_DEVICE_SECRET"/g, `"${deviceSecret}"`);
-    content = content.replace(/"YOUR_DEVICE_NAME"/g, `"${deviceName}"`);
-    content = content.replace(/"YOUR_SOLANA_WALLET_ADDRESS"/g, `"${solanaWallet}"`);
-    content = content.replace(/"YOUR_BASE_WALLET_ADDRESS"/g, `"${baseWallet}"`);
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const link = document.createElement('a');
-    link.download = `BikeLock-${deviceId}.ino`;
-    link.href = URL.createObjectURL(blob);
-    link.click();
-    URL.revokeObjectURL(link.href);
-
-    btn.textContent = '✅ Downloaded!';
-    setTimeout(() => { btn.textContent = '⬇ Download Full Arduino File'; btn.disabled = false; }, 2000);
-  } catch (err) {
-    btn.textContent = '❌ Failed - try again';
-    btn.disabled = false;
-    showAlert('reg-alert', 'error', 'Could not fetch Arduino file: ' + err.message);
-  }
-}
-
-function downloadArduinoConfig() {
-  const config = document.getElementById('res-arduino-full').textContent;
-  const deviceId = document.getElementById('res-deviceId').textContent || 'device';
-  const blob = new Blob([config], { type: 'text/plain' });
-  const link = document.createElement('a');
-  link.download = `TSE-X-Config-${deviceId}.ino`;
-  link.href = URL.createObjectURL(blob);
-  link.click();
-  URL.revokeObjectURL(link.href);
-}
-
-function copyArduinoConfig() {
-  const config = document.getElementById('res-arduino-full').textContent;
-  navigator.clipboard.writeText(config).then(() => {
-    const btn = event.target;
-    btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Copy Config', 1500);
-  });
-}
-
-// REGISTER DEVICE
+// ===== REGISTER DEVICE =====
 async function registerDevice(){
   const deviceId=document.getElementById('reg-deviceId').value.trim().toUpperCase();
   const deviceName=document.getElementById('reg-deviceName').value.trim();
@@ -609,10 +954,10 @@ async function registerDevice(){
   hideAlert('reg-alert');
   if(!deviceId||!deviceName||!deviceType) return showAlert('reg-alert','error','Please fill in Device ID, Name and Type.');
   if(!deviceId.startsWith('TSE-')&&!deviceId.startsWith('X402-')) return showAlert('reg-alert','error','Device ID must start with TSE- or X402-');
-  if(!solanaWallet&&!baseWallet) return showAlert('reg-alert','error','Please enter at least one wallet address (Solana or Base).');
-
+  if(deviceId.includes(' ')) return showAlert('reg-alert','error','Device ID cannot contain spaces.');
+  if(!solanaWallet&&!baseWallet) return showAlert('reg-alert','error','At least one wallet address is required.');
   const btn=document.getElementById('reg-btn'); btn.innerHTML='<span class="spinner"></span> Registering...'; btn.disabled=true;
-  try{
+  try {
     const res=await fetch(`${API}/devices/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId,deviceName,deviceType,model,firmwareVersion:firmware,solanaWalletAddress:solanaWallet,baseWalletAddress:baseWallet})});
     const data=await res.json();
     if(!data.success) throw new Error(data.error||'Registration failed');
@@ -620,175 +965,145 @@ async function registerDevice(){
     document.getElementById('res-deviceId').textContent=data.deviceId;
     document.getElementById('res-secret').textContent=data.deviceSecret;
     document.getElementById('res-arduino').textContent=data.arduinoCode;
-
-    // Generate full Arduino config block
-    const fullConfig = generateArduinoConfig(
-      deviceId, data.deviceSecret,
-      document.getElementById('reg-deviceName').value.trim(),
-      document.getElementById('reg-solanaWallet').value.trim(),
-      document.getElementById('reg-baseWallet').value.trim()
-    );
-    document.getElementById('res-arduino-full').textContent = fullConfig;
-
     document.getElementById('reg-result').style.display='block';
+    // Arduino full config
+    const fullConfig=generateArduinoConfig(deviceId,data.deviceSecret,deviceName,solanaWallet,baseWallet);
+    document.getElementById('res-arduino-full').textContent=fullConfig;
+    document.getElementById('reg-arduino-section').style.display='block';
     document.getElementById('reg-prices-card').style.display='block';
-
-    // Generate QR code
-    currentQRData = buildQRData(deviceId, deviceName, deviceType, model, firmware||'1.0.0', solanaWallet, baseWallet);
-    const jsonStr = generateQR('qr-canvas', currentQRData);
-    document.getElementById('qr-json-preview').textContent = JSON.stringify(currentQRData, null, 2);
+    // QR code
+    currentQRData=buildQRData(deviceId,deviceName,deviceType,model,firmware||'1.0.0',solanaWallet,baseWallet);
+    generateQR('qr-canvas',currentQRData);
+    document.getElementById('qr-json-preview').textContent=JSON.stringify(currentQRData,null,2);
     document.getElementById('reg-qr-box').style.display='block';
-
-    showAlert('reg-alert','success','Device registered successfully!');
-  }catch(e){ showAlert('reg-alert','error',e.message); }
+    // Save to My Devices
+    saveMyDevice({deviceId,deviceName,deviceType,registeredAt:new Date().toISOString(),priceCount:0});
+    toast('Device registered successfully!', 'success');
+    showAlert('reg-alert','success','Device registered! Save your secret key — it cannot be retrieved later.');
+  } catch(e){ showAlert('reg-alert','error',e.message); toast(e.message,'error'); }
   finally{ btn.innerHTML='Register Device'; btn.disabled=false; }
 }
 
 async function saveRegPrices(){
   if(!regDeviceId||!regDeviceSecret) return showAlert('reg-prices-alert','error','Register a device first.');
   const prices=collectPrices('reg','reg-prices-alert'); if(prices===null) return;
-  if(prices.length===0) return showAlert('reg-prices-alert','error','Add at least one price item.');
+  if(prices.length===0) return showAlert('reg-prices-alert','error','Add at least one pricing tier.');
   const btn=document.getElementById('reg-prices-btn'); btn.innerHTML='<span class="spinner"></span> Saving...'; btn.disabled=true;
-  try{
+  try {
     const res=await fetch(`${API}/api/device-prices/${regDeviceId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret:regDeviceSecret,prices})});
     const data=await res.json(); if(!data.success) throw new Error(data.error);
-    showAlert('reg-prices-alert','success',`${data.count} price item(s) saved!`);
-  }catch(e){ showAlert('reg-prices-alert','error',e.message); }
-  finally{ btn.innerHTML='Save Prices'; btn.disabled=false; }
+    // Update count in my devices
+    saveMyDevice({deviceId:regDeviceId,deviceName:document.getElementById('reg-deviceName').value.trim(),deviceType:document.getElementById('reg-deviceType').value,registeredAt:new Date().toISOString(),priceCount:data.count});
+    toast(`${data.count} pricing tier(s) saved!`, 'success');
+    showAlert('reg-prices-alert','success',`${data.count} pricing tier(s) saved!`);
+  } catch(e){ showAlert('reg-prices-alert','error',e.message); toast(e.message,'error'); }
+  finally{ btn.innerHTML='Save Pricing'; btn.disabled=false; }
 }
 
+// ===== MANAGE PRICES =====
 async function loadPrices(){
-  const deviceId=document.getElementById('mgr-deviceId').value.trim(); hideAlert('mgr-alert');
+  const deviceId=document.getElementById('mgr-deviceId').value.trim().toUpperCase(); hideAlert('mgr-alert');
   if(!deviceId) return showAlert('mgr-alert','error','Please enter a Device ID.');
   const btn=document.getElementById('load-btn'); btn.innerHTML='<span class="spinner"></span> Loading...'; btn.disabled=true;
-  try{
+  try {
     const res=await fetch(`${API}/api/device-prices/${deviceId}`);
     const data=await res.json(); if(!data.success) throw new Error(data.error);
     const c=document.getElementById('mgr-price-items'); c.innerHTML=''; pc.mgr=0;
     if(data.prices.length>0){ data.prices.forEach(item=>{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr,item)); pc.mgr++; }); }
     else{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr)); pc.mgr++; }
     document.getElementById('mgr-prices-section').style.display='block';
-    showAlert('mgr-alert','info',`Loaded ${data.prices.length} price item(s) for ${data.deviceName}.`);
-
-    // Generate QR code
-    const mgrQRData = buildQRData(data.deviceId, data.deviceName, data.deviceType, data.model||'', data.firmwareVersion||'1.0.0', data.solanaWalletAddress||'', data.baseWalletAddress||'');
-    generateQR('mgr-qr-canvas', mgrQRData);
-    window._mgrQRData = mgrQRData;
-    window._mgrDeviceId = data.deviceId;
+    // QR code
+    const mgrQRData=buildQRData(data.deviceId,data.deviceName,data.deviceType,data.model||'',data.firmwareVersion||'1.0.0',data.solanaWalletAddress||'',data.baseWalletAddress||'');
+    generateQR('mgr-qr-canvas',mgrQRData);
+    window._mgrQRData=mgrQRData; window._mgrDeviceId=data.deviceId;
     document.getElementById('mgr-qr-box').style.display='block';
-  }catch(e){ showAlert('mgr-alert','error',e.message); }
-  finally{ btn.innerHTML='Load Current Prices'; btn.disabled=false; }
+    showAlert('mgr-alert','info',`Loaded ${data.deviceName} — ${data.prices.length} pricing tier(s).`);
+    toast(`Loaded ${data.deviceName}`, 'success');
+  } catch(e){ showAlert('mgr-alert','error',e.message); toast(e.message,'error'); }
+  finally{ btn.innerHTML='Load Device'; btn.disabled=false; }
 }
 
 async function updatePrices(){
-  const deviceId=document.getElementById('mgr-deviceId').value.trim();
+  const deviceId=document.getElementById('mgr-deviceId').value.trim().toUpperCase();
   const deviceSecret=document.getElementById('mgr-secret').value.trim();
-  if(!deviceSecret) return showAlert('mgr-alert','error','Device Secret is required.');
+  if(!deviceSecret) return showAlert('mgr-alert','error','Device Secret Key is required to save changes.');
   const prices=collectPrices('mgr','mgr-alert'); if(prices===null) return;
-  if(prices.length===0) return showAlert('mgr-alert','error','Add at least one price item.');
-  const btn=document.getElementById('update-btn'); btn.innerHTML='<span class="spinner"></span> Updating...'; btn.disabled=true;
-  try{
+  if(prices.length===0) return showAlert('mgr-alert','error','Add at least one pricing tier.');
+  const btn=document.getElementById('update-btn'); btn.innerHTML='<span class="spinner"></span> Saving...'; btn.disabled=true;
+  try {
     const res=await fetch(`${API}/api/device-prices/${deviceId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret,prices})});
     const data=await res.json(); if(!data.success) throw new Error(data.error);
-    showAlert('mgr-alert','success',`${data.count} price item(s) updated!`);
-  }catch(e){ showAlert('mgr-alert','error',e.message); }
-  finally{ btn.innerHTML='Update Prices'; btn.disabled=false; }
+    toast(`${data.count} pricing tier(s) updated!`, 'success');
+    showAlert('mgr-alert','success',`${data.count} pricing tier(s) updated successfully.`);
+  } catch(e){ showAlert('mgr-alert','error',e.message); toast(e.message,'error'); }
+  finally{ btn.innerHTML='Save Changes'; btn.disabled=false; }
 }
 
-function downloadMgrQR() {
-  const canvas = document.querySelector('#mgr-qr-canvas canvas');
-  if (!canvas) return;
-  const link = document.createElement('a');
-  link.download = `TSE-X-QR-${window._mgrDeviceId||'device'}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-}
-
-async function downloadMgrArduinoFile() {
-  const deviceId = document.getElementById('mgr-deviceId').value.trim().toUpperCase();
-  if (!deviceId) return showAlert('mgr-alert', 'error', 'Please load a device first.');
-  if (!window._mgrQRData) return showAlert('mgr-alert', 'error', 'Please load the device prices first.');
-
-  const btn = event.target;
-  btn.textContent = '⏳ Fetching...';
-  btn.disabled = true;
-
+// ===== LOOKUP =====
+async function lookupDevice(){
+  const deviceId=document.getElementById('lkp-deviceId').value.trim().toUpperCase(); hideAlert('lkp-alert');
+  document.getElementById('lkp-result').classList.remove('show');
+  document.getElementById('lkp-qr-box').style.display='none';
+  if(!deviceId) return showAlert('lkp-alert','error','Please enter a Device ID.');
   try {
-    const res = await fetch('https://raw.githubusercontent.com/TSE-Sol/tse-x-arduino-library/main/examples/BikeLock/BikeLock.ino');
-    if (!res.ok) throw new Error('Could not fetch BikeLock.ino from GitHub');
-    let content = await res.text();
-
-    const qr = window._mgrQRData;
-    const solanaWallet = qr.chains?.find(c => c.chain === 'solana')?.wallet || '';
-    const baseWallet = qr.chains?.find(c => c.chain === 'base')?.wallet || '';
-
-    content = content.replace(/"YOUR_DEVICE_ID"/g, `"${deviceId}"`);
-    content = content.replace(/"YOUR_DEVICE_SECRET"/g, `"${document.getElementById('mgr-secret').value.trim()}"`);
-    content = content.replace(/"YOUR_DEVICE_NAME"/g, `"${qr.deviceName || deviceId}"`);
-    content = content.replace(/"YOUR_SOLANA_WALLET_ADDRESS"/g, `"${solanaWallet}"`);
-    content = content.replace(/"YOUR_BASE_WALLET_ADDRESS"/g, `"${baseWallet}"`);
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const link = document.createElement('a');
-    link.download = `BikeLock-${deviceId}.ino`;
-    link.href = URL.createObjectURL(blob);
-    link.click();
-    URL.revokeObjectURL(link.href);
-
-    btn.textContent = '✅ Downloaded!';
-    setTimeout(() => { btn.textContent = '⬇ Download Arduino File'; btn.disabled = false; }, 2000);
-  } catch (err) {
-    showAlert('mgr-alert', 'error', 'Could not fetch Arduino file: ' + err.message);
-    btn.textContent = '⬇ Download Arduino File';
-    btn.disabled = false;
-  }
+    const res=await fetch(`${API}/api/device-prices/${deviceId}`);
+    const data=await res.json(); if(!data.success) throw new Error(data.error);
+    document.getElementById('lkp-name').textContent=data.deviceName;
+    document.getElementById('lkp-id-display').textContent=`ID: ${data.deviceId} · Type: ${data.deviceType}`;
+    const t=data.deviceType?.toLowerCase();
+    const badge=document.getElementById('lkp-badge');
+    badge.textContent=data.deviceType;
+    badge.className='device-type-badge '+(t?.includes('bike')?'badge-bike':t?.includes('coffee')?'badge-coffee':t?.includes('lock')?'badge-lock':t?.includes('vending')?'badge-vending':'badge-other');
+    // Wallet info
+    document.getElementById('lkp-wallet-info').innerHTML=[
+      data.solanaWalletAddress?`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Solana Wallet</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);word-break:break-all;">${data.solanaWalletAddress}</div></div>`:'',
+      data.baseWalletAddress?`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Base Wallet</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);word-break:break-all;">${data.baseWalletAddress}</div></div>`:''
+    ].join('');
+    // Prices
+    const list=document.getElementById('lkp-prices-list');
+    list.innerHTML=data.prices.length===0?'<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">No pricing tiers set for this device yet.</div>':
+      data.prices.map(p=>`<div class="price-list-item">
+        <div>
+          <div class="price-item-name">${p.name}</div>
+          ${p.description?`<div class="price-item-desc">${p.description}</div>`:''}
+          <div class="price-item-tags">
+            ${p.duration?`<span class="price-tag">⏱ ${p.duration} min</span>`:''}
+            ${p.image?`<span class="price-tag">🖼 Image</span>`:''}
+          </div>
+        </div>
+        <div class="price-amount">$${p.priceUsd.toFixed(2)}</div>
+      </div>`).join('');
+    document.getElementById('lkp-result').classList.add('show');
+    // QR
+    currentLkpQRData=buildQRData(data.deviceId,data.deviceName,data.deviceType,data.model||'',data.firmwareVersion||'1.0.0',data.solanaWalletAddress||'',data.baseWalletAddress||'');
+    generateQR('lkp-qr-canvas',currentLkpQRData);
+    document.getElementById('lkp-qr-box').style.display='block';
+    toast(`Found: ${data.deviceName}`, 'success');
+  } catch(e){ showAlert('lkp-alert','error',e.message); toast(e.message,'error'); }
 }
 
+// ===== DELETE =====
 async function deleteDevice(){
   const deviceId=document.getElementById('del-deviceId').value.trim().toUpperCase();
   const deviceSecret=document.getElementById('del-secret').value.trim();
   const confirm=document.getElementById('del-confirm').value.trim().toUpperCase();
   hideAlert('del-alert');
-  if(!deviceId||!deviceSecret||!confirm) return showAlert('del-alert','error','Please fill in all fields.');
-  if(deviceId!==confirm) return showAlert('del-alert','error','Device ID confirmation does not match.');
+  if(!deviceId||!deviceSecret||!confirm) return showAlert('del-alert','error','All three fields are required.');
+  if(deviceId!==confirm) return showAlert('del-alert','error','Device ID confirmation does not match. Check for typos.');
   const btn=document.getElementById('del-btn'); btn.innerHTML='<span class="spinner"></span> Deleting...'; btn.disabled=true;
-  try{
+  try {
     const res=await fetch(`${API}/api/device-prices/${deviceId}/device`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret})});
     const data=await res.json(); if(!data.success) throw new Error(data.error);
+    removeMyDevice(deviceId);
     showAlert('del-alert','success',data.message);
-    document.getElementById('del-deviceId').value='';
-    document.getElementById('del-secret').value='';
-    document.getElementById('del-confirm').value='';
-  }catch(e){ showAlert('del-alert','error',e.message); }
+    document.getElementById('del-deviceId').value=''; document.getElementById('del-secret').value=''; document.getElementById('del-confirm').value='';
+    toast('Device deleted from network', 'success');
+  } catch(e){ showAlert('del-alert','error',e.message); toast(e.message,'error'); }
   finally{ btn.innerHTML='Permanently Delete Device'; btn.disabled=false; }
 }
 
-async function lookupDevice(){
-  const deviceId=document.getElementById('lkp-deviceId').value.trim(); hideAlert('lkp-alert');
-  document.getElementById('lkp-result').classList.remove('show');
-  document.getElementById('lkp-qr-box').classList.remove('show');
-  if(!deviceId) return showAlert('lkp-alert','error','Please enter a Device ID.');
-  try{
-    const res=await fetch(`${API}/api/device-prices/${deviceId}`);
-    const data=await res.json(); if(!data.success) throw new Error(data.error);
-    document.getElementById('lkp-name').textContent=data.deviceName;
-    document.getElementById('lkp-id').textContent=`ID: ${data.deviceId} · Type: ${data.deviceType}`;
-    const badge=document.getElementById('lkp-badge'); const t=data.deviceType.toLowerCase();
-    badge.textContent=data.deviceType;
-    badge.className='device-badge '+(t.includes('coffee')?'badge-coffee':t.includes('bike')?'badge-bike':t.includes('lock')?'badge-lock':'badge-other');
-    const list=document.getElementById('lkp-prices-list');
-    list.innerHTML=data.prices.length===0?'<div class="empty">No prices set for this device yet.</div>':
-      data.prices.map(p=>`<div class="price-list-item"><div><div class="price-name">${p.name}</div>${p.description?`<div class="price-desc">${p.description}</div>`:''}<div class="price-meta">${p.duration?`<span class="price-tag">⏱ ${p.duration} min</span>`:''} ${p.image?`<span class="price-tag">🖼 Image</span>`:''}</div></div><div class="price-amount">$${p.priceUsd.toFixed(2)}</div></div>`).join('');
-    document.getElementById('lkp-result').classList.add('show');
-
-    // Generate QR for lookup using stored wallet addresses
-    const solanaWallet = data.solanaWalletAddress || '';
-    const baseWallet = data.baseWalletAddress || '';
-    currentLkpQRData = buildQRData(data.deviceId, data.deviceName, data.deviceType, data.model||'', data.firmwareVersion||'1.0.0', solanaWallet, baseWallet);
-    generateQR('lkp-qr-canvas', currentLkpQRData);
-    document.getElementById('lkp-qr-box').classList.add('show');
-  }catch(e){ showAlert('lkp-alert','error',e.message); }
-}
+// Enter key on lookup
+document.getElementById('lkp-deviceId').addEventListener('keydown', e=>{ if(e.key==='Enter') lookupDevice(); });
 </script>
 </body>
 </html>
