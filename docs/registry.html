@@ -29,6 +29,26 @@
   --text-muted:#6b7280;
   --sidebar-w:240px;
 }
+body.light-mode {
+  --bg:#f1f3f5;
+  --bg2:#e8eaec;
+  --bg3:#dfe2e6;
+  --card:#ffffff;
+  --card2:#f4f5f7;
+  --border:#d1d5db;
+  --border2:#c4c9d0;
+  --blue:#2451D1;
+  --blue-bright:#3b6ef7;
+  --blue-dim:#dbeafe;
+  --blue-glow:rgba(36,81,209,0.08);
+  --blue-glow2:rgba(36,81,209,0.15);
+  --green:#16a34a;
+  --red:#dc2626;
+  --orange:#ea580c;
+  --text:#111827;
+  --text-dim:#374151;
+  --text-muted:#6b7280;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden;}
@@ -364,6 +384,10 @@ select option{background:var(--bg3);}
       </div>
     </nav>
     <div class="sidebar-footer">
+      <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-label">Light Mode</span>
+      </button>
       <div class="user-box">
         <div class="user-avatar" id="user-initial">?</div>
         <div class="user-email" id="user-email-display">Loading...</div>
@@ -661,9 +685,13 @@ select option{background:var(--bg3);}
                 <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-top:2px;">Referrals</div>
               </div>
               <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--orange);" id="prof-stat-joined">—</div>
-                <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-top:2px;">Member Since</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--orange);" id="prof-stat-credits">—</div>
+                <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-top:2px;">Credits</div>
               </div>
+            </div>
+            <div style="margin-top:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);">Member Since</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text);" id="prof-stat-joined">—</div>
             </div>
           </div>
 
@@ -764,7 +792,25 @@ let currentQRData = null;
 let currentLkpQRData = null;
 const pc = { reg:0, mgr:0 };
 
-// ===== TOAST =====
+// ===== THEME TOGGLE =====
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  document.getElementById('theme-icon').textContent = isLight ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = isLight ? 'Dark Mode' : 'Light Mode';
+  localStorage.setItem('tsex_theme', isLight ? 'light' : 'dark');
+}
+// Apply saved theme on load
+(function(){
+  if(localStorage.getItem('tsex_theme') === 'light') {
+    document.body.classList.add('light-mode');
+    document.addEventListener('DOMContentLoaded', () => {
+      const icon = document.getElementById('theme-icon');
+      const label = document.getElementById('theme-label');
+      if(icon) icon.textContent = '🌙';
+      if(label) label.textContent = 'Dark Mode';
+    });
+  }
+})();
 function toast(msg, type='info') {
   const icons = {success:'✓',error:'✕',info:'ℹ'};
   const el = document.createElement('div');
@@ -1195,8 +1241,9 @@ async function loadProfile() {
 
   // Update topbar
   const topbarAvatar = document.getElementById('topbar-avatar');
-  setAvatarEl(topbarAvatar, photoURL, initial);
-  document.getElementById('topbar-email-short').textContent = email;
+  if(topbarAvatar) setAvatarEl(topbarAvatar, photoURL, initial);
+  const topbarEmailShort = document.getElementById('topbar-email-short');
+  if(topbarEmailShort) topbarEmailShort.textContent = email;
 
   // Update sidebar
   const sidebarAvatar = document.getElementById('user-initial');
@@ -1223,6 +1270,12 @@ async function loadProfile() {
       document.getElementById('prof-referralCode').textContent = data.referral_code || data.referralCode || '—';
       document.getElementById('prof-referredBy').textContent = data.referred_by || data.referredBy || 'Direct signup';
       document.getElementById('prof-stat-referrals').textContent = data.referral_count || data.referralCount || 0;
+
+      // Credits = referrals earned minus credits used
+      const referralCount = data.referral_count || data.referralCount || 0;
+      const creditsUsed = data.referralCreditsUsed || 0;
+      const credits = Math.max(0, referralCount - creditsUsed);
+      document.getElementById('prof-stat-credits').textContent = credits;
 
       // Member since
       const created = data.created_time || data.createdAt;
