@@ -372,6 +372,10 @@ select option{background:var(--bg3);}
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Lookup Device
       </div>
+      <div class="nav-item" onclick="switchPanel('payments',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Payments Received
+      </div>
       <div class="nav-section">Danger Zone</div>
       <div class="nav-item" onclick="switchPanel('delete',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -660,6 +664,68 @@ select option{background:var(--bg3);}
         </div>
       </div>
 
+      <!-- PAYMENTS -->
+      <div class="panel" id="panel-payments">
+        <!-- Summary Stats -->
+        <div class="stats-bar" id="pay-stats-bar" style="margin-bottom:20px;">
+          <div class="stat-card"><div class="stat-value" id="pay-stat-total">—</div><div class="stat-label">Total Payments</div></div>
+          <div class="stat-card"><div class="stat-value" id="pay-stat-volume">—</div><div class="stat-label">Total Volume</div></div>
+          <div class="stat-card"><div class="stat-value" id="pay-stat-devices">—</div><div class="stat-label">Active Devices</div></div>
+        </div>
+
+        <div class="card card-accent">
+          <div class="card-title">Payment Ledger</div>
+          <div class="card-sub">All payments received across your registered devices.</div>
+
+          <!-- Filters -->
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+            <select id="pay-filter-device" onchange="loadPayments(1)" style="flex:1;min-width:160px;padding:9px 12px;font-size:13px;">
+              <option value="">All Devices</option>
+            </select>
+            <select id="pay-filter-chain" onchange="loadPayments(1)" style="width:130px;padding:9px 12px;font-size:13px;">
+              <option value="">All Chains</option>
+              <option value="solana">Solana</option>
+              <option value="base">Base</option>
+            </select>
+            <select id="pay-filter-token" onchange="loadPayments(1)" style="width:120px;padding:9px 12px;font-size:13px;">
+              <option value="">All Tokens</option>
+              <option value="TSE">TSE</option>
+              <option value="USDC">USDC</option>
+            </select>
+            <button class="app-btn app-btn-outline" onclick="loadPayments(1)">Refresh</button>
+          </div>
+
+          <!-- Table -->
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;" id="pay-table">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border2);">
+                  <th style="text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);">Date</th>
+                  <th style="text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);">Device</th>
+                  <th style="text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);">From Wallet</th>
+                  <th style="text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);">Chain</th>
+                  <th style="text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);">Token</th>
+                  <th style="text-align:right;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);">Amount</th>
+                  <th style="text-align:left;padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);">Tx Hash</th>
+                </tr>
+              </thead>
+              <tbody id="pay-tbody">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Loading payments...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+            <div style="font-size:12px;color:var(--text-muted);" id="pay-pagination-info"></div>
+            <div style="display:flex;gap:8px;">
+              <button class="app-btn app-btn-outline app-btn-sm" id="pay-prev" onclick="loadPayments(window._payPage-1)" disabled>← Prev</button>
+              <button class="app-btn app-btn-outline app-btn-sm" id="pay-next" onclick="loadPayments(window._payPage+1)" disabled>Next →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- PROFILE -->
       <div class="panel" id="panel-profile">
         <div style="max-width:560px;">
@@ -849,7 +915,7 @@ async function forgotPassword(){
 function doSignOut(){ if(confirm('Are you sure you want to sign out?')) window._a.signOut(window._a.auth); }
 
 // ===== NAVIGATION =====
-const panelTitles = {dashboard:'Dashboard',mydevices:'My Devices',register:'Register Device',prices:'Manage Prices',lookup:'Device Lookup',delete:'Delete Device',profile:'My Profile'};
+const panelTitles = {dashboard:'Dashboard',mydevices:'My Devices',register:'Register Device',prices:'Manage Prices',lookup:'Device Lookup',delete:'Delete Device',profile:'My Profile',payments:'Payments Received'};
 function switchPanel(panel, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1224,7 +1290,118 @@ async function deleteDevice(){
   finally{ btn.innerHTML='Permanently Delete Device'; btn.disabled=false; }
 }
 
-// ===== PROFILE =====
+// ===== PAYMENTS =====
+window._payPage = 1;
+const PAY_LIMIT = 20;
+
+async function loadPayments(page = 1) {
+  window._payPage = page;
+  const myDevices = getMyDevices().map(d => d.deviceId);
+  const deviceFilter = document.getElementById('pay-filter-device').value;
+  const chainFilter = document.getElementById('pay-filter-chain').value;
+  const tokenFilter = document.getElementById('pay-filter-token').value;
+  const offset = (page - 1) * PAY_LIMIT;
+
+  // Populate device filter dropdown
+  const sel = document.getElementById('pay-filter-device');
+  if(sel.options.length <= 1 && myDevices.length > 0) {
+    myDevices.forEach(id => {
+      const opt = document.createElement('option');
+      opt.value = id; opt.textContent = id;
+      sel.appendChild(opt);
+    });
+  }
+
+  const tbody = document.getElementById('pay-tbody');
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);"><span class="spinner" style="border-color:rgba(36,81,209,.3);border-top-color:var(--blue);"></span></td></tr>`;
+
+  try {
+    let url = `${API}/api/transactions?limit=${PAY_LIMIT}&offset=${offset}`;
+    if(chainFilter) url += `&chain=${chainFilter}`;
+    if(tokenFilter) url += `&token=${tokenFilter}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error);
+
+    // Filter to operator's devices only (or selected device)
+    let txs = data.transactions;
+    if(myDevices.length > 0 && !deviceFilter) {
+      txs = txs.filter(t => myDevices.includes(t.deviceId));
+    } else if(deviceFilter) {
+      txs = txs.filter(t => t.deviceId === deviceFilter);
+    }
+
+    // Stats
+    const totalVol = txs.reduce((s, t) => s + (t.amountUsd || 0), 0);
+    const uniqueDevices = new Set(txs.map(t => t.deviceId)).size;
+    document.getElementById('pay-stat-total').textContent = data.pagination.total;
+    document.getElementById('pay-stat-volume').textContent = '$' + totalVol.toFixed(2);
+    document.getElementById('pay-stat-devices').textContent = uniqueDevices || myDevices.length;
+
+    if(txs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No payments found for your devices yet.</td></tr>`;
+      return;
+    }
+
+    const chainColors = { solana:'#9945ff', base:'#0052ff' };
+    const tokenColors = { TSE:'var(--blue)', USDC:'var(--green)' };
+
+    tbody.innerHTML = txs.map(t => {
+      const date = new Date(t.timestamp);
+      const dateStr = date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const timeStr = date.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      const txShort = t.txHash ? (t.txHash.length > 16 ? t.txHash.substring(0,8)+'...'+t.txHash.slice(-6) : t.txHash) : '—';
+      const isAutoDetected = t.txHash?.startsWith('auto-detected');
+      const chainColor = chainColors[t.chain] || 'var(--text-muted)';
+      const tokenColor = tokenColors[t.token] || 'var(--text-muted)';
+      return `<tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+        <td style="padding:12px;white-space:nowrap;">
+          <div style="font-size:13px;">${dateStr}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${timeStr}</div>
+        </td>
+        <td style="padding:12px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue);">${t.deviceId}</div>
+        </td>
+        <td style="padding:12px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);">${t.wallet || '—'}</div>
+        </td>
+        <td style="padding:12px;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${chainColor};">${t.chain}</span>
+        </td>
+        <td style="padding:12px;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${tokenColor};">${t.token}</span>
+        </td>
+        <td style="padding:12px;text-align:right;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--green);">$${(t.amountUsd||0).toFixed(4)}</div>
+        </td>
+        <td style="padding:12px;">
+          ${isAutoDetected
+            ? `<span style="font-size:11px;color:var(--text-muted);font-style:italic;">Auto-detected</span>`
+            : `<a href="${t.chain==='solana'?'https://solscan.io/tx/'+t.txHash:'https://basescan.org/tx/'+t.txHash}" target="_blank" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);text-decoration:none;" title="${t.txHash}">${txShort} ↗</a>`
+          }
+        </td>
+      </tr>`;
+    }).join('');
+
+    // Pagination
+    const total = data.pagination.total;
+    const totalPages = Math.ceil(total / PAY_LIMIT);
+    document.getElementById('pay-pagination-info').textContent = `Page ${page} of ${totalPages} · ${total} total transactions`;
+    document.getElementById('pay-prev').disabled = page <= 1;
+    document.getElementById('pay-next').disabled = page >= totalPages;
+
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--red);">Error loading payments: ${err.message}</td></tr>`;
+  }
+}
+
+// Load payments when panel is opened
+const _origSwitchPanel = switchPanel;
+function switchPanel(panel, el) {
+  _origSwitchPanel(panel, el);
+  if(panel === 'payments') loadPayments(1);
+}
 function setAvatarEl(el, photoURL, initial, size=30) {
   if(photoURL) {
     el.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${initial}'">`;
