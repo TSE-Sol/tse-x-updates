@@ -835,6 +835,10 @@ const db = getFirestore(app);
 const gp = new GoogleAuthProvider();
 const ap = new OAuthProvider('apple.com');
 
+// Set _db immediately so loadProfile can use it
+window._db = { db, doc, getDoc, updateDoc };
+window._a = { auth, gp, ap, signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, signOut };
+
 onAuthStateChanged(auth, u => {
   if (u) {
     document.getElementById('auth-screen').style.display = 'none';
@@ -846,14 +850,13 @@ onAuthStateChanged(auth, u => {
     window._userEmail = email;
     window._userPhotoURL = u.photoURL || '';
     loadMyDevices();
-    loadProfile();
+    // Small delay to ensure DOM is ready
+    setTimeout(() => loadProfile(), 100);
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display = 'none';
   }
 });
-window._a = { auth, gp, ap, signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, signOut };
-window._db = { db, doc, getDoc, updateDoc };
 </script>
 
 <script>
@@ -1531,23 +1534,28 @@ async function loadProfile() {
   const photoURL = window._userPhotoURL || '';
   const initial = (email[0] || '?').toUpperCase();
 
-  // Update topbar
+  // Update topbar immediately with auth data
   const topbarAvatar = document.getElementById('topbar-avatar');
   if(topbarAvatar) setAvatarEl(topbarAvatar, photoURL, initial);
+  const topbarName = document.getElementById('topbar-name');
+  if(topbarName) topbarName.textContent = email.split('@')[0] || email;
   const topbarEmailShort = document.getElementById('topbar-email-short');
   if(topbarEmailShort) topbarEmailShort.textContent = email;
 
   // Update sidebar
   const sidebarAvatar = document.getElementById('user-initial');
-  setAvatarEl(sidebarAvatar, photoURL, initial);
+  if(sidebarAvatar) setAvatarEl(sidebarAvatar, photoURL, initial);
 
   // Set profile panel fields from Auth
-  document.getElementById('prof-email').value = email;
+  const profEmail = document.getElementById('prof-email');
+  if(profEmail) profEmail.value = email;
   document.getElementById('prof-stat-devices').textContent = getMyDevices().length;
 
   // Update large avatar
   const largeAvatar = document.getElementById('profile-avatar-large');
-  setAvatarEl(largeAvatar, photoURL, initial, 72);
+  if(largeAvatar) setAvatarEl(largeAvatar, photoURL, initial, 72);
+
+  if(!window._db) return;
 
   try {
     const { db, doc, getDoc } = window._db;
