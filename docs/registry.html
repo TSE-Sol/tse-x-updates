@@ -393,7 +393,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.2</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.3</div>
       <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
         <span id="theme-icon">☀️</span>
         <span id="theme-label">Light Mode</span>
@@ -584,7 +584,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
           <div class="card-sub">Enter your Device ID and Secret Key to load and update pricing tiers.</div>
           <div class="form-row">
             <div class="fg"><label>Device ID *</label><input type="text" id="mgr-deviceId" placeholder="e.g. TSE-COFFEE-001"></div>
-            <div class="fg"><label>Device Secret Key *</label><input type="password" id="mgr-secret" placeholder="Your 16-character secret"></div>
+            <div class="fg"><label>Device Secret Key *</label><input type="password" id="mgr-secret" placeholder="Required to load and save changes"></div>
           </div>
           <button class="app-btn app-btn-primary" onclick="loadPrices()" id="load-btn">Load Device</button>
           <div class="alert" id="mgr-alert" style="margin-top:14px;"></div>
@@ -1208,8 +1208,11 @@ async function saveRegPrices(){
 
 // ===== MANAGE PRICES =====
 async function loadPrices(){
-  const deviceId=document.getElementById('mgr-deviceId').value.trim().toUpperCase(); hideAlert('mgr-alert');
+  const deviceId=document.getElementById('mgr-deviceId').value.trim().toUpperCase();
+  const deviceSecret=document.getElementById('mgr-secret').value.trim();
+  hideAlert('mgr-alert');
   if(!deviceId) return showAlert('mgr-alert','error','Please enter a Device ID.');
+  if(!deviceSecret) return showAlert('mgr-alert','error','Please enter your Device Secret Key to load this device.');
   const btn=document.getElementById('load-btn'); btn.innerHTML='<span class="spinner"></span> Loading...'; btn.disabled=true;
   try {
     const res=await fetch(`${API}/api/device-prices/${deviceId}`);
@@ -1262,8 +1265,8 @@ async function lookupDevice(){
     badge.className='device-type-badge '+(t?.includes('bike')?'badge-bike':t?.includes('coffee')?'badge-coffee':t?.includes('lock')?'badge-lock':t?.includes('vending')?'badge-vending':'badge-other');
     // Wallet info
     document.getElementById('lkp-wallet-info').innerHTML=[
-      data.solanaWalletAddress?`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Solana Wallet</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);word-break:break-all;">${data.solanaWalletAddress}</div></div>`:'',
-      data.baseWalletAddress?`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Base Wallet</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);word-break:break-all;">${data.baseWalletAddress}</div></div>`:''
+      data.solanaWalletAddress?`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Solana Wallet</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);">${data.solanaWalletAddress.slice(0,6)}...${data.solanaWalletAddress.slice(-6)}</div></div>`:'',
+      data.baseWalletAddress?`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Base Wallet</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);">${data.baseWalletAddress.slice(0,6)}...${data.baseWalletAddress.slice(-6)}</div></div>`:''
     ].join('');
     // Prices
     const list=document.getElementById('lkp-prices-list');
