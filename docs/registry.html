@@ -393,7 +393,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.3</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.4</div>
       <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
         <span id="theme-icon">☀️</span>
         <span id="theme-label">Light Mode</span>
@@ -1215,8 +1215,16 @@ async function loadPrices(){
   if(!deviceSecret) return showAlert('mgr-alert','error','Please enter your Device Secret Key to load this device.');
   const btn=document.getElementById('load-btn'); btn.innerHTML='<span class="spinner"></span> Loading...'; btn.disabled=true;
   try {
+    // Fetch prices (public endpoint)
     const res=await fetch(`${API}/api/device-prices/${deviceId}`);
     const data=await res.json(); if(!data.success) throw new Error(data.error);
+
+    // Validate secret before showing anything
+    const validateRes=await fetch(`${API}/api/device-prices/${deviceId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret,prices:data.prices})});
+    const validateData=await validateRes.json();
+    if(!validateData.success) throw new Error('Invalid Device Secret Key. Access denied.');
+
+    // Secret valid — show prices
     const c=document.getElementById('mgr-price-items'); c.innerHTML=''; pc.mgr=0;
     if(data.prices.length>0){ data.prices.forEach(item=>{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr,item)); pc.mgr++; }); }
     else{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr)); pc.mgr++; }
