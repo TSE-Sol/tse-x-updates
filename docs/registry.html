@@ -393,6 +393,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
     </nav>
     <div class="sidebar-footer">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.0</div>
       <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
         <span id="theme-icon">☀️</span>
         <span id="theme-label">Light Mode</span>
@@ -844,13 +845,18 @@ onAuthStateChanged(auth, u => {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'flex';
     const email = u.email || u.displayName || '';
+    const initial = (email[0] || '?').toUpperCase();
+    const name = u.displayName || email.split('@')[0] || email;
+    // Set immediately from Auth data
     document.getElementById('user-email-display').textContent = email;
-    document.getElementById('user-initial').textContent = (email[0] || '?').toUpperCase();
+    document.getElementById('user-initial').textContent = initial;
+    document.getElementById('topbar-name').textContent = name;
+    document.getElementById('topbar-email-short').textContent = email;
+    document.getElementById('topbar-avatar').textContent = initial;
     window._uid = u.uid;
     window._userEmail = email;
     window._userPhotoURL = u.photoURL || '';
     loadMyDevices();
-    // Small delay to ensure DOM is ready
     setTimeout(() => loadProfile(), 100);
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
