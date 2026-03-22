@@ -677,22 +677,23 @@ select option{background:var(--bg3);}
           <div class="card-title">Payment Ledger</div>
           <div class="card-sub">All payments received across your registered devices.</div>
 
-          <!-- Filters -->
           <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-            <select id="pay-filter-device" onchange="loadPayments(1)" style="flex:1;min-width:160px;padding:9px 12px;font-size:13px;">
+            <select id="pay-filter-device" onchange="window._payAllTxs=[];loadPayments(1)" style="flex:1;min-width:160px;padding:9px 12px;font-size:13px;">
               <option value="">All Devices</option>
             </select>
-            <select id="pay-filter-chain" onchange="loadPayments(1)" style="width:130px;padding:9px 12px;font-size:13px;">
+            <select id="pay-filter-chain" onchange="window._payAllTxs=[];loadPayments(1)" style="width:130px;padding:9px 12px;font-size:13px;">
               <option value="">All Chains</option>
               <option value="solana">Solana</option>
               <option value="base">Base</option>
             </select>
-            <select id="pay-filter-token" onchange="loadPayments(1)" style="width:120px;padding:9px 12px;font-size:13px;">
+            <select id="pay-filter-token" onchange="window._payAllTxs=[];loadPayments(1)" style="width:120px;padding:9px 12px;font-size:13px;">
               <option value="">All Tokens</option>
               <option value="TSE">TSE</option>
               <option value="USDC">USDC</option>
             </select>
-            <button class="app-btn app-btn-outline" onclick="loadPayments(1)">Refresh</button>
+            <button class="app-btn app-btn-outline" onclick="window._payAllTxs=[];loadPayments(1)">Refresh</button>
+            <button class="app-btn app-btn-outline" onclick="exportCSV()" title="Export to Excel/CSV">⬇ CSV</button>
+            <button class="app-btn app-btn-outline" onclick="exportPDF()" title="Export to PDF">⬇ PDF</button>
           </div>
 
           <!-- Table -->
@@ -1291,19 +1292,115 @@ async function deleteDevice(){
   finally{ btn.innerHTML='Permanently Delete Device'; btn.disabled=false; }
 }
 
-// ===== PAYMENTS =====
+// ===== EXPORT =====
+function getFilteredTxs() {
+  const myDevices = getMyDevices().map(d => d.deviceId);
+  const deviceFilter = document.getElementById('pay-filter-device').value;
+  const chainFilter = document.getElementById('pay-filter-chain').value;
+  const tokenFilter = document.getElementById('pay-filter-token').value;
+  let txs = window._payAllTxs || [];
+  if(deviceFilter) txs = txs.filter(t => t.deviceId === deviceFilter);
+  else if(myDevices.length > 0) txs = txs.filter(t => myDevices.includes(t.deviceId));
+  if(chainFilter) txs = txs.filter(t => t.chain === chainFilter);
+  if(tokenFilter) txs = txs.filter(t => t.token === tokenFilter);
+  return txs;
+}
+
+function exportCSV() {
+  const txs = getFilteredTxs();
+  if(!txs.length) return toast('No transactions to export', 'error');
+  const headers = ['Date','Time','Device ID','From Wallet','Chain','Token','Amount USD','Tx Hash'];
+  const rows = txs.map(t => {
+    const d = new Date(t.timestamp);
+    return [
+      d.toLocaleDateString('en-US'),
+      d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+      t.deviceId,
+      t.wallet || '',
+      t.chain,
+      t.token,
+      (t.amountUsd||0).toFixed(4),
+      t.txHash || ''
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.download = `TSE-X-Payments-${new Date().toISOString().slice(0,10)}.csv`;
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  URL.revokeObjectURL(link.href);
+  toast(`Exported ${txs.length} transactions as CSV`, 'success');
+}
+
+function exportPDF() {
+  const txs = getFilteredTxs();
+  if(!txs.length) return toast('No transactions to export', 'error');
+  const totalVol = txs.reduce((s,t) => s+(t.amountUsd||0), 0);
+  const now = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+
+  const rows = txs.map(t => {
+    const d = new Date(t.timestamp);
+    const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const timeStr = d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    const txShort = t.txHash && !t.txHash.startsWith('auto-detected') ? t.txHash.substring(0,12)+'...' : (t.txHash?.startsWith('auto-detected') ? 'Auto-detected' : '—');
+    return `<tr>
+      <td>${dateStr} ${timeStr}</td>
+      <td style="font-family:monospace;font-size:11px;">${t.deviceId}</td>
+      <td style="font-family:monospace;font-size:10px;">${t.wallet||'—'}</td>
+      <td>${t.chain}</td>
+      <td>${t.token}</td>
+      <td style="text-align:right;font-weight:600;">$${(t.amountUsd||0).toFixed(4)}</td>
+      <td style="font-family:monospace;font-size:10px;">${txShort}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>TSE-X Payment Ledger</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:32px;color:#111;font-size:13px;}
+    h1{font-size:22px;margin-bottom:4px;color:#2451D1;}
+    .meta{color:#666;font-size:12px;margin-bottom:24px;}
+    .summary{display:flex;gap:24px;margin-bottom:24px;padding:16px;background:#f4f5f7;border-radius:8px;}
+    .summary div{text-align:center;}
+    .summary .val{font-size:20px;font-weight:700;color:#2451D1;}
+    .summary .lbl{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em;}
+    table{width:100%;border-collapse:collapse;font-size:12px;}
+    th{background:#2451D1;color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
+    td{padding:8px 10px;border-bottom:1px solid #e5e7eb;}
+    tr:nth-child(even) td{background:#f9fafb;}
+    .footer{margin-top:24px;font-size:11px;color:#999;text-align:center;}
+  </style></head><body>
+  <h1>TSE-X Payment Ledger</h1>
+  <div class="meta">Generated on ${now} · ${txs.length} transactions</div>
+  <div class="summary">
+    <div><div class="val">${txs.length}</div><div class="lbl">Transactions</div></div>
+    <div><div class="val">$${totalVol.toFixed(2)}</div><div class="lbl">Total Volume</div></div>
+    <div><div class="val">${new Set(txs.map(t=>t.deviceId)).size}</div><div class="lbl">Devices</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Date & Time</th><th>Device</th><th>From Wallet</th><th>Chain</th><th>Token</th><th>Amount</th><th>Tx Hash</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">TSE-X DePIN Payment Platform · tse-sol.github.io/tse-x-updates/registry.html</div>
+  <scr` + `ipt>window.onload=()=>window.print();<\/scr` + `ipt>
+  </body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  toast(`Opening PDF export for ${txs.length} transactions`, 'success');
+}
 window._payPage = 1;
+window._payAllTxs = [];
 const PAY_LIMIT = 20;
 
 async function loadPayments(page = 1) {
   window._payPage = page;
   const myDevices = getMyDevices().map(d => d.deviceId);
-  const deviceFilter = document.getElementById('pay-filter-device').value;
-  const chainFilter = document.getElementById('pay-filter-chain').value;
-  const tokenFilter = document.getElementById('pay-filter-token').value;
-  const offset = (page - 1) * PAY_LIMIT;
 
-  // Populate device filter dropdown
+  // Populate device filter dropdown once
   const sel = document.getElementById('pay-filter-device');
   if(sel.options.length <= 1 && myDevices.length > 0) {
     myDevices.forEach(id => {
@@ -1313,93 +1410,111 @@ async function loadPayments(page = 1) {
     });
   }
 
+  const deviceFilter = document.getElementById('pay-filter-device').value;
+  const chainFilter = document.getElementById('pay-filter-chain').value;
+  const tokenFilter = document.getElementById('pay-filter-token').value;
+
   const tbody = document.getElementById('pay-tbody');
-  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);"><span class="spinner" style="border-color:rgba(36,81,209,.3);border-top-color:var(--blue);"></span></td></tr>`;
 
-  try {
-    let url = `${API}/api/transactions?limit=${PAY_LIMIT}&offset=${offset}`;
-    if(chainFilter) url += `&chain=${chainFilter}`;
-    if(tokenFilter) url += `&token=${tokenFilter}`;
-
-    const res = await fetch(url);
-    const data = await res.json();
-    if(!data.success) throw new Error(data.error);
-
-    // Filter to operator's devices only (or selected device)
-    let txs = data.transactions;
-    if(myDevices.length > 0 && !deviceFilter) {
-      txs = txs.filter(t => myDevices.includes(t.deviceId));
-    } else if(deviceFilter) {
-      txs = txs.filter(t => t.deviceId === deviceFilter);
-    }
-
-    // Stats
-    const totalVol = txs.reduce((s, t) => s + (t.amountUsd || 0), 0);
-    const uniqueDevices = new Set(txs.map(t => t.deviceId)).size;
-    document.getElementById('pay-stat-total').textContent = data.pagination.total;
-    document.getElementById('pay-stat-volume').textContent = '$' + totalVol.toFixed(2);
-    document.getElementById('pay-stat-devices').textContent = uniqueDevices || myDevices.length;
-
-    if(txs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No payments found for your devices yet.</td></tr>`;
+  // Only re-fetch from API if no cached data or filters changed
+  if(page === 1 || window._payAllTxs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);"><span class="spinner" style="border-color:rgba(36,81,209,.3);border-top-color:var(--blue);width:20px;height:20px;border-width:3px;"></span></td></tr>`;
+    try {
+      // Fetch up to 500 to allow client-side filtering
+      const res = await fetch(`${API}/api/transactions?limit=500&offset=0`);
+      const data = await res.json();
+      if(!data.success) throw new Error(data.error);
+      window._payAllTxs = data.transactions;
+    } catch(err) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--red);">Error loading payments: ${err.message}</td></tr>`;
       return;
     }
-
-    const chainColors = { solana:'#9945ff', base:'#0052ff' };
-    const tokenColors = { TSE:'var(--blue)', USDC:'var(--green)' };
-
-    tbody.innerHTML = txs.map(t => {
-      const date = new Date(t.timestamp);
-      const dateStr = date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-      const timeStr = date.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-      const txShort = t.txHash ? (t.txHash.length > 16 ? t.txHash.substring(0,8)+'...'+t.txHash.slice(-6) : t.txHash) : '—';
-      const isAutoDetected = t.txHash?.startsWith('auto-detected');
-      const chainColor = chainColors[t.chain] || 'var(--text-muted)';
-      const tokenColor = tokenColors[t.token] || 'var(--text-muted)';
-      return `<tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
-        <td style="padding:12px;white-space:nowrap;">
-          <div style="font-size:13px;">${dateStr}</div>
-          <div style="font-size:11px;color:var(--text-muted);">${timeStr}</div>
-        </td>
-        <td style="padding:12px;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue);">${t.deviceId}</div>
-        </td>
-        <td style="padding:12px;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);">${t.wallet || '—'}</div>
-        </td>
-        <td style="padding:12px;">
-          <span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${chainColor};">${t.chain}</span>
-        </td>
-        <td style="padding:12px;">
-          <span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${tokenColor};">${t.token}</span>
-        </td>
-        <td style="padding:12px;text-align:right;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--green);">$${(t.amountUsd||0).toFixed(4)}</div>
-        </td>
-        <td style="padding:12px;">
-          ${isAutoDetected
-            ? `<span style="font-size:11px;color:var(--text-muted);font-style:italic;">Auto-detected</span>`
-            : `<a href="${t.chain==='solana'?'https://solscan.io/tx/'+t.txHash:'https://basescan.org/tx/'+t.txHash}" target="_blank" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);text-decoration:none;" title="${t.txHash}">${txShort} ↗</a>`
-          }
-        </td>
-      </tr>`;
-    }).join('');
-
-    // Pagination
-    const total = data.pagination.total;
-    const totalPages = Math.ceil(total / PAY_LIMIT);
-    document.getElementById('pay-pagination-info').textContent = `Page ${page} of ${totalPages} · ${total} total transactions`;
-    document.getElementById('pay-prev').disabled = page <= 1;
-    document.getElementById('pay-next').disabled = page >= totalPages;
-
-  } catch(err) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--red);">Error loading payments: ${err.message}</td></tr>`;
   }
+
+  // Apply filters client-side
+  let txs = window._payAllTxs;
+  if(deviceFilter) {
+    txs = txs.filter(t => t.deviceId === deviceFilter);
+  } else if(myDevices.length > 0) {
+    txs = txs.filter(t => myDevices.includes(t.deviceId));
+  }
+  if(chainFilter) txs = txs.filter(t => t.chain === chainFilter);
+  if(tokenFilter) txs = txs.filter(t => t.token === tokenFilter);
+
+  // Stats
+  const totalVol = txs.reduce((s, t) => s + (t.amountUsd || 0), 0);
+  const uniqueDevices = new Set(txs.map(t => t.deviceId)).size;
+  document.getElementById('pay-stat-total').textContent = txs.length;
+  document.getElementById('pay-stat-volume').textContent = '$' + totalVol.toFixed(2);
+  document.getElementById('pay-stat-devices').textContent = uniqueDevices || myDevices.length;
+
+  // Paginate client-side
+  const total = txs.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAY_LIMIT));
+  const offset = (page - 1) * PAY_LIMIT;
+  const pageTxs = txs.slice(offset, offset + PAY_LIMIT);
+
+  if(pageTxs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No payments found for your devices yet.</td></tr>`;
+    document.getElementById('pay-pagination-info').textContent = `0 transactions`;
+    document.getElementById('pay-prev').disabled = true;
+    document.getElementById('pay-next').disabled = true;
+    return;
+  }
+
+  const chainColors = { solana:'#9945ff', base:'#0052ff' };
+  const tokenColors = { TSE:'var(--blue)', USDC:'var(--green)' };
+
+  tbody.innerHTML = pageTxs.map(t => {
+    const date = new Date(t.timestamp);
+    const dateStr = date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const timeStr = date.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    const txShort = t.txHash ? (t.txHash.length > 16 ? t.txHash.substring(0,8)+'...'+t.txHash.slice(-6) : t.txHash) : '—';
+    const isAutoDetected = t.txHash?.startsWith('auto-detected');
+    const chainColor = chainColors[t.chain] || 'var(--text-muted)';
+    const tokenColor = tokenColors[t.token] || 'var(--text-muted)';
+    return `<tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      <td style="padding:12px;white-space:nowrap;">
+        <div style="font-size:13px;">${dateStr}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${timeStr}</div>
+      </td>
+      <td style="padding:12px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue);">${t.deviceId}</div>
+      </td>
+      <td style="padding:12px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);">${t.wallet || '—'}</div>
+      </td>
+      <td style="padding:12px;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${chainColor};">${t.chain}</span>
+      </td>
+      <td style="padding:12px;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:${tokenColor};">${t.token}</span>
+      </td>
+      <td style="padding:12px;text-align:right;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--green);">$${(t.amountUsd||0).toFixed(4)}</div>
+      </td>
+      <td style="padding:12px;">
+        ${isAutoDetected
+          ? `<span style="font-size:11px;color:var(--text-muted);font-style:italic;">Auto-detected</span>`
+          : `<a href="${t.chain==='solana'?'https://solscan.io/tx/'+t.txHash:'https://basescan.org/tx/'+t.txHash}" target="_blank" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);text-decoration:none;" title="${t.txHash}">${txShort} ↗</a>`
+        }
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('pay-pagination-info').textContent = `Page ${page} of ${totalPages} · ${total} transactions`;
+  document.getElementById('pay-prev').disabled = page <= 1;
+  document.getElementById('pay-next').disabled = page >= totalPages;
 }
 
 function setAvatarEl(el, photoURL, initial, size=30) {
   if(photoURL) {
-    el.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${initial}'">`;
+    const img = document.createElement('img');
+    img.src = photoURL;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+    img.onerror = () => { el.innerHTML=''; el.textContent = initial; };
+    el.innerHTML = '';
+    el.appendChild(img);
   } else {
     el.textContent = initial;
   }
