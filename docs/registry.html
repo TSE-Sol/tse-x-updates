@@ -393,7 +393,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.6</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.7</div>
       <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
         <span id="theme-icon">☀️</span>
         <span id="theme-label">Light Mode</span>
@@ -428,7 +428,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
         <div class="stats-bar" id="stats-bar">
           <div class="stat-card"><div class="stat-value" id="stat-devices">—</div><div class="stat-label">My Devices</div></div>
           <div class="stat-card"><div class="stat-value" id="stat-network" style="color:var(--green);font-size:16px;padding-top:6px;">SOL · BASE</div><div class="stat-label">Networks</div></div>
-          <div class="stat-card"><div class="stat-value" id="stat-network">Live</div><div class="stat-label">Network Status</div></div>
+          <div class="stat-card"><div class="stat-value" id="stat-status" style="font-size:16px;padding-top:6px;color:var(--text-muted);">Checking...</div><div class="stat-label">Network Status</div></div>
         </div>
         <div class="card card-accent">
           <div class="card-title">Welcome to TSE-X Device Registry</div>
@@ -881,6 +881,7 @@ onAuthStateChanged(auth, u => {
     loadMyDevices();
     fetchMyDevicesFromBackend(email);
     setTimeout(() => loadProfile(), 500);
+    setTimeout(() => checkNetworkStatus(), 1000);
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('app-screen').style.display = 'none';
@@ -962,6 +963,7 @@ function switchPanel(panel, el) {
   document.getElementById('topbar-title').textContent = panelTitles[panel] || panel;
   if(panel === 'payments') loadPayments(1);
   if(panel === 'profile') loadProfile();
+  if(panel === 'dashboard') checkNetworkStatus();
 }
 
 // ===== MY DEVICES (localStorage) =====
@@ -1414,14 +1416,34 @@ async function transferDevice() {
   } catch(e) { showAlert('transfer-alert','error',e.message); toast(e.message,'error'); }
   finally { btn.innerHTML = 'Transfer Device'; btn.disabled = false; }
 }
+// ===== NETWORK STATUS CHECK =====
+async function checkNetworkStatus() {
+  const el = document.getElementById('stat-status');
+  if(!el) return;
+  try {
+    const res = await fetch(`${API}/api/stats`, {signal: AbortSignal.timeout(5000)});
+    if(res.ok) {
+      el.textContent = 'Live';
+      el.style.color = 'var(--green)';
+    } else {
+      el.textContent = 'Degraded';
+      el.style.color = 'var(--orange)';
+    }
+  } catch(err) {
+    el.textContent = 'Offline';
+    el.style.color = 'var(--red)';
+  }
+}
+
 function getFilteredTxs() {
   const myDevices = getMyDevices().map(d => d.deviceId);
   const deviceFilter = document.getElementById('pay-filter-device').value;
   const chainFilter = document.getElementById('pay-filter-chain').value;
   const tokenFilter = document.getElementById('pay-filter-token').value;
   let txs = window._payAllTxs || [];
+  // Always restrict to my devices
   if(deviceFilter) txs = txs.filter(t => t.deviceId === deviceFilter);
-  else if(myDevices.length > 0) txs = txs.filter(t => myDevices.includes(t.deviceId));
+  else txs = txs.filter(t => myDevices.includes(t.deviceId));
   if(chainFilter) txs = txs.filter(t => t.chain === chainFilter);
   if(tokenFilter) txs = txs.filter(t => t.token === tokenFilter);
   return txs;
@@ -1552,11 +1574,23 @@ async function loadPayments(page = 1) {
     }
   }
 
-  // Apply filters client-side
+  // Apply filters client-side — ALWAYS filter to my devices only
+  if(myDevices.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No devices registered to your account yet.<br><span style="font-size:12px;">Register a device or claim an existing one to see payments here.</span></td></tr>`;
+    document.getElementById('pay-stat-total').textContent = '0';
+    document.getElementById('pay-stat-volume').textContent = '$0.00';
+    document.getElementById('pay-stat-devices').textContent = '0';
+    document.getElementById('pay-pagination-info').textContent = '';
+    document.getElementById('pay-prev').disabled = true;
+    document.getElementById('pay-next').disabled = true;
+    return;
+  }
+
   let txs = window._payAllTxs;
   if(deviceFilter) {
     txs = txs.filter(t => t.deviceId === deviceFilter);
-  } else if(myDevices.length > 0) {
+  } else {
+    // Always restrict to my devices — never show other people's payments
     txs = txs.filter(t => myDevices.includes(t.deviceId));
   }
   if(chainFilter) txs = txs.filter(t => t.chain === chainFilter);
