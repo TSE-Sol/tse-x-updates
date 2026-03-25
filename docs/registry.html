@@ -393,7 +393,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.5</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.6</div>
       <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
         <span id="theme-icon">☀️</span>
         <span id="theme-label">Light Mode</span>
@@ -485,6 +485,16 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
             <div class="empty-title">No Devices Yet</div>
             <div class="empty-sub">Register your first device to see it here.<br>Devices are tracked in your browser.</div>
           </div>
+        </div>
+
+        <div class="card" style="margin-top:8px;border-color:rgba(249,115,22,.2);">
+          <div class="card-title">Transfer Device Ownership</div>
+          <div class="card-sub">Move a device to a different email account. The secret key is required to authorize the transfer.</div>
+          <div class="alert" id="transfer-alert"></div>
+          <div class="fg"><label>Device ID *</label><input type="text" id="transfer-deviceId" placeholder="e.g. TSE-BIKE-001"></div>
+          <div class="fg"><label>Device Secret Key *</label><input type="password" id="transfer-secret" placeholder="Your 16-character secret"><div class="fhint">Proves you own this device</div></div>
+          <div class="fg"><label>Transfer to Email *</label><input type="email" id="transfer-email" placeholder="newowner@example.com"><div class="fhint">The new owner must have a TSE-X account</div></div>
+          <button class="app-btn app-btn-outline" style="border-color:rgba(249,115,22,.4);color:var(--orange);" onclick="transferDevice()" id="transfer-btn">Transfer Device</button>
         </div>
       </div>
 
@@ -650,6 +660,17 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
           <div class="qr-actions">
             <button class="app-btn app-btn-primary" onclick="downloadLkpQR()">⬇ Download QR Code</button>
           </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(36,81,209,.2);">
+          <div class="card-title">Claim Device to My Account</div>
+          <div class="card-sub">Already own a device that's not in your list? Enter the Device ID and Secret Key to add it to your account.</div>
+          <div class="alert" id="claim-alert"></div>
+          <div class="form-row">
+            <div class="fg"><label>Device ID *</label><input type="text" id="claim-deviceId" placeholder="e.g. TSE-BIKE-001"></div>
+            <div class="fg"><label>Device Secret Key *</label><input type="password" id="claim-secret" placeholder="Your 16-character secret"></div>
+          </div>
+          <button class="app-btn app-btn-primary" onclick="claimDevice()" id="claim-btn">Claim Device</button>
         </div>
       </div>
 
@@ -858,6 +879,7 @@ onAuthStateChanged(auth, u => {
     window._userEmail = email;
     window._userPhotoURL = u.photoURL || '';
     loadMyDevices();
+    fetchMyDevicesFromBackend(email);
     setTimeout(() => loadProfile(), 500);
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
@@ -1164,7 +1186,7 @@ async function registerDevice(){
   if(!solanaWallet&&!baseWallet) return showAlert('reg-alert','error','At least one wallet address is required.');
   const btn=document.getElementById('reg-btn'); btn.innerHTML='<span class="spinner"></span> Registering...'; btn.disabled=true;
   try {
-    const res=await fetch(`${API}/devices/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId,deviceName,deviceType,model,firmwareVersion:firmware,solanaWalletAddress:solanaWallet,baseWalletAddress:baseWallet})});
+    const res=await fetch(`${API}/devices/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId,deviceName,deviceType,model,firmwareVersion:firmware,solanaWalletAddress:solanaWallet,baseWalletAddress:baseWallet,ownerEmail:window._userEmail||''})});
     const data=await res.json();
     if(!data.success) throw new Error(data.error||'Registration failed');
     regDeviceId=data.deviceId; regDeviceSecret=data.deviceSecret;
@@ -1319,7 +1341,79 @@ async function deleteDevice(){
   finally{ btn.innerHTML='Permanently Delete Device'; btn.disabled=false; }
 }
 
-// ===== EXPORT =====
+// ===== FETCH MY DEVICES FROM BACKEND =====
+async function fetchMyDevicesFromBackend(email) {
+  if(!email) return;
+  try {
+    const res = await fetch(`${API}/devices/my-devices?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    if(!data.success) return;
+    // Merge backend devices into localStorage
+    data.devices.forEach(d => {
+      const existing = getMyDevices().find(e => e.deviceId === d.deviceId);
+      if(!existing) {
+        saveMyDevice({
+          deviceId: d.deviceId,
+          deviceName: d.deviceName,
+          deviceType: d.deviceType,
+          registeredAt: d.registeredAt || new Date().toISOString(),
+          priceCount: d.priceCount || 0,
+          fromBackend: true
+        });
+      }
+    });
+    if(data.count > 0) loadMyDevices();
+  } catch(err) {
+    console.error('fetchMyDevicesFromBackend error:', err);
+  }
+}
+
+// ===== CLAIM DEVICE =====
+async function claimDevice() {
+  const deviceId = document.getElementById('claim-deviceId').value.trim().toUpperCase();
+  const deviceSecret = document.getElementById('claim-secret').value.trim();
+  hideAlert('claim-alert');
+  if(!deviceId || !deviceSecret) return showAlert('claim-alert','error','Device ID and Secret Key are required.');
+  const btn = document.getElementById('claim-btn');
+  btn.innerHTML = '<span class="spinner"></span> Claiming...'; btn.disabled = true;
+  try {
+    const email = window._userEmail;
+    const res = await fetch(`${API}/devices/claim`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({deviceId, deviceSecret, ownerEmail: email})});
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error);
+    saveMyDevice({deviceId: data.deviceId, deviceName: data.deviceName, deviceType: data.deviceType, registeredAt: new Date().toISOString(), priceCount: 0});
+    showAlert('claim-alert','success',`${data.deviceName} added to your account!`);
+    toast(`${data.deviceName} claimed successfully!`, 'success');
+    document.getElementById('claim-deviceId').value = '';
+    document.getElementById('claim-secret').value = '';
+  } catch(e) { showAlert('claim-alert','error',e.message); toast(e.message,'error'); }
+  finally { btn.innerHTML = 'Claim Device'; btn.disabled = false; }
+}
+
+// ===== TRANSFER DEVICE =====
+async function transferDevice() {
+  const deviceId = document.getElementById('transfer-deviceId').value.trim().toUpperCase();
+  const deviceSecret = document.getElementById('transfer-secret').value.trim();
+  const newEmail = document.getElementById('transfer-email').value.trim().toLowerCase();
+  hideAlert('transfer-alert');
+  if(!deviceId || !deviceSecret || !newEmail) return showAlert('transfer-alert','error','All fields are required.');
+  if(!newEmail.includes('@')) return showAlert('transfer-alert','error','Please enter a valid email address.');
+  if(!confirm(`Transfer ${deviceId} to ${newEmail}? This cannot be undone without the secret key.`)) return;
+  const btn = document.getElementById('transfer-btn');
+  btn.innerHTML = '<span class="spinner"></span> Transferring...'; btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/devices/transfer`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({deviceId, deviceSecret, newOwnerEmail: newEmail})});
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error);
+    removeMyDevice(deviceId);
+    showAlert('transfer-alert','success',`${data.deviceName} transferred to ${newEmail}`);
+    toast(`Device transferred to ${newEmail}`, 'success');
+    document.getElementById('transfer-deviceId').value = '';
+    document.getElementById('transfer-secret').value = '';
+    document.getElementById('transfer-email').value = '';
+  } catch(e) { showAlert('transfer-alert','error',e.message); toast(e.message,'error'); }
+  finally { btn.innerHTML = 'Transfer Device'; btn.disabled = false; }
+}
 function getFilteredTxs() {
   const myDevices = getMyDevices().map(d => d.deviceId);
   const deviceFilter = document.getElementById('pay-filter-device').value;
