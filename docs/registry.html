@@ -393,7 +393,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.4</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.5</div>
       <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
         <span id="theme-icon">☀️</span>
         <span id="theme-label">Light Mode</span>
@@ -1553,11 +1553,12 @@ async function loadProfile() {
   const photoURL = window._userPhotoURL || '';
   const initial = (email[0] || '?').toUpperCase();
 
-  // Update topbar immediately with auth data
+  // Update topbar immediately - use cached name if available, else email prefix
   const topbarAvatar = document.getElementById('topbar-avatar');
   if(topbarAvatar) setAvatarEl(topbarAvatar, photoURL, initial);
   const topbarName = document.getElementById('topbar-name');
-  if(topbarName) topbarName.textContent = email.split('@')[0] || email;
+  if(topbarName && !window._cachedDisplayName) topbarName.textContent = email.split('@')[0] || email;
+  else if(topbarName && window._cachedDisplayName) topbarName.textContent = window._cachedDisplayName;
   const topbarEmailShort = document.getElementById('topbar-email-short');
   if(topbarEmailShort) topbarEmailShort.textContent = email;
 
@@ -1583,6 +1584,7 @@ async function loadProfile() {
       const data = snap.data();
       const displayName = data.display_name || data.displayName || '';
       if(displayName) {
+        window._cachedDisplayName = displayName;
         document.getElementById('prof-displayName').value = displayName;
         document.getElementById('profile-name-display').textContent = displayName;
         document.getElementById('topbar-name').textContent = displayName;
@@ -1652,6 +1654,7 @@ async function saveProfile() {
       display_name: displayName,
       displayName: displayName,
     });
+    window._cachedDisplayName = displayName;
     document.getElementById('profile-name-display').textContent = displayName;
     document.getElementById('topbar-name').textContent = displayName;
     showAlert('profile-alert','success','Profile updated successfully.');
