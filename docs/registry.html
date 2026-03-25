@@ -393,7 +393,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.7</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.8</div>
       <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
         <span id="theme-icon">☀️</span>
         <span id="theme-label">Light Mode</span>
@@ -988,25 +988,22 @@ function removeMyDevice(deviceId) {
 }
 
 function loadMyDevices() {
-  const devices = getMyDevices();
-  const count = devices.length;
+  const devs = getMyDevices();
+  const count = devs.length;
   document.getElementById('my-devices-count').textContent = count;
   document.getElementById('stat-devices').textContent = count;
   const grid = document.getElementById('my-devices-grid');
-  const empty = document.getElementById('my-devices-empty');
 
   if(count === 0) {
-    grid.innerHTML = '';
-    grid.appendChild(empty);
-    empty.style.display = 'block';
-    document.getElementById('stat-prices').textContent = '—';
+    grid.innerHTML = `<div class="empty-state" id="my-devices-empty" style="grid-column:1/-1;">
+      <div class="empty-icon">📡</div>
+      <div class="empty-title">No Devices Yet</div>
+      <div class="empty-sub">Register your first device to see it here.<br>Devices are tracked in your browser.</div>
+    </div>`;
     return;
   }
 
-  empty.style.display = 'none';
-  let totalPrices = 0;
-  grid.innerHTML = devices.map(d => {
-    if(d.priceCount) totalPrices += d.priceCount;
+  grid.innerHTML = devs.map(d => {
     const typeClass = d.deviceType?.toLowerCase().includes('bike')?'badge-bike':d.deviceType?.toLowerCase().includes('coffee')?'badge-coffee':d.deviceType?.toLowerCase().includes('lock')?'badge-lock':d.deviceType?.toLowerCase().includes('vending')?'badge-vending':'badge-other';
     const date = d.registeredAt ? new Date(d.registeredAt).toLocaleDateString() : '';
     return `<div class="device-card" onclick="openDeviceFromMyDevices('${d.deviceId}')">
@@ -1019,7 +1016,6 @@ function loadMyDevices() {
       </div>
     </div>`;
   }).join('');
-  document.getElementById('stat-prices').textContent = totalPrices || '—';
 }
 
 function openDeviceFromMyDevices(deviceId) {
