@@ -393,7 +393,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.8</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.9</div>
       <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
         <span id="theme-icon">☀️</span>
         <span id="theme-label">Light Mode</span>
@@ -1006,13 +1006,17 @@ function loadMyDevices() {
   grid.innerHTML = devs.map(d => {
     const typeClass = d.deviceType?.toLowerCase().includes('bike')?'badge-bike':d.deviceType?.toLowerCase().includes('coffee')?'badge-coffee':d.deviceType?.toLowerCase().includes('lock')?'badge-lock':d.deviceType?.toLowerCase().includes('vending')?'badge-vending':'badge-other';
     const date = d.registeredAt ? new Date(d.registeredAt).toLocaleDateString() : '';
-    return `<div class="device-card" onclick="openDeviceFromMyDevices('${d.deviceId}')">
+    return `<div class="device-card" id="device-card-${d.deviceId}">
       <div class="device-card-id">${d.deviceId}</div>
-      <div class="device-card-name">${d.deviceName||d.deviceId}</div>
+      <div class="device-card-name" onclick="openDeviceFromMyDevices('${d.deviceId}')" style="cursor:pointer;">${d.deviceName||d.deviceId}</div>
       <div class="device-card-type">${d.deviceType||'IoT Device'}</div>
       <div class="device-card-meta">
         <span class="device-type-badge ${typeClass}">${d.deviceType||'Device'}</span>
         <span class="device-card-date">${date}</span>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;">
+        <button class="app-btn app-btn-outline app-btn-sm" style="flex:1;" onclick="openDeviceFromMyDevices('${d.deviceId}')">Manage</button>
+        <button class="app-btn app-btn-sm" style="border:1px solid rgba(239,68,68,.3);color:var(--red);background:transparent;" onclick="removeDeviceFromList('${d.deviceId}', '${(d.deviceName||d.deviceId).replace(/'/g,'\\\'')}')" title="Remove from this browser list">Remove</button>
       </div>
     </div>`;
   }).join('');
@@ -1022,6 +1026,12 @@ function openDeviceFromMyDevices(deviceId) {
   document.getElementById('mgr-deviceId').value = deviceId;
   switchPanel('prices', document.querySelector('.nav-item:nth-child(5)'));
   toast('Enter your secret key to manage '+deviceId, 'info');
+}
+
+function removeDeviceFromList(deviceId, deviceName) {
+  if(!confirm(`Remove "${deviceName}" from this browser?\n\nThis only removes it from your local list — the device stays registered on the network. You can re-add it anytime via Lookup → Claim Device.`)) return;
+  removeMyDevice(deviceId);
+  toast(`${deviceName} removed from your list`, 'success');
 }
 
 // ===== UTILS =====
@@ -1416,8 +1426,15 @@ async function transferDevice() {
 async function checkNetworkStatus() {
   const el = document.getElementById('stat-status');
   if(!el) return;
+  el.textContent = 'Checking...';
+  el.style.color = 'var(--text-muted)';
+  const timer = setTimeout(() => {
+    el.textContent = 'Waking up...';
+    el.style.color = 'var(--orange)';
+  }, 5000);
   try {
-    const res = await fetch(`${API}/api/stats`, {signal: AbortSignal.timeout(5000)});
+    const res = await fetch(`${API}/api/stats`, {signal: AbortSignal.timeout(45000)});
+    clearTimeout(timer);
     if(res.ok) {
       el.textContent = 'Live';
       el.style.color = 'var(--green)';
@@ -1426,6 +1443,7 @@ async function checkNetworkStatus() {
       el.style.color = 'var(--orange)';
     }
   } catch(err) {
+    clearTimeout(timer);
     el.textContent = 'Offline';
     el.style.color = 'var(--red)';
   }
