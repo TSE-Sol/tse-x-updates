@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSE-X Platform Updates</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #0a0e17;
+      --bg-card: #111827;
+      --bg-card-hover: #1a2235;
+      --border: #1e293b;
+      --border-accent: #0d9488;
+      --teal: #14b8a6;
+      --teal-dim: #0d9488;
+      --teal-glow: rgba(20, 184, 166, 0.15);
+      --purple: #a78bfa;
+      --purple-dim: #7c3aed;
+      --orange: #fb923c;
+      --orange-dim: #ea580c;
+      --blue: #60a5fa;
+      --green: #34d399;
+      --red: #f87171;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg-deep); color: var(--text); line-height: 1.6; min-height: 100vh; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(20,184,166,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124,58,237,0.04) 0%, transparent 60%); pointer-events: none; z-index: 0; }
+    .container { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .header { text-align: center; margin-bottom: 3rem; padding: 3rem 0 2rem; }
+    .logo-mark { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal); background: var(--teal-glow); border: 1px solid rgba(20,184,166,0.2); padding: 0.4rem 1rem; border-radius: 100px; margin-bottom: 1.5rem; }
+    .logo-mark::before { content: '◆'; font-size: 0.6rem; }
+    .header h1 { font-size: 2.6rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.5rem; background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header p { color: var(--text-dim); font-size: 1.05rem; font-weight: 300; max-width: 500px; margin: 0 auto; }
+    .versions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 3rem; }
+    .version-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; transition: border-color 0.3s, transform 0.2s; }
+    .version-card:hover { border-color: var(--border-accent); transform: translateY(-2px); }
+    .version-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .version-number { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 600; }
+    .version-card:nth-child(1) .version-number { color: var(--teal); }
+    .version-card:nth-child(2) .version-number { color: var(--purple); }
+    .version-card:nth-child(3) .version-number { color: var(--orange); }
+    .version-date { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .filters { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .filter-btn { font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 500; padding: 0.5rem 1.1rem; border-radius: 100px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.2s; }
+    .filter-btn:hover { border-color: var(--text-muted); color: var(--text); }
+    .filter-btn.active { background: var(--teal); border-color: var(--teal); color: #0a0e17; font-weight: 600; }
+    .timeline { position: relative; }
+    .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--teal-dim), var(--border) 80%, transparent); border-radius: 2px; }
+    .release { position: relative; padding-left: 2.5rem; margin-bottom: 2.5rem; opacity: 0; animation: fadeSlideIn 0.4s ease forwards; }
+    .release:nth-child(1) { animation-delay: 0.05s; } .release:nth-child(2) { animation-delay: 0.1s; } .release:nth-child(3) { animation-delay: 0.15s; } .release:nth-child(4) { animation-delay: 0.2s; } .release:nth-child(5) { animation-delay: 0.25s; } .release:nth-child(6) { animation-delay: 0.3s; } .release:nth-child(7) { animation-delay: 0.35s; } .release:nth-child(8) { animation-delay: 0.4s; } .release:nth-child(9) { animation-delay: 0.45s; } .release:nth-child(10) { animation-delay: 0.5s; } .release:nth-child(11) { animation-delay: 0.55s; } .release:nth-child(12) { animation-delay: 0.6s; } .release:nth-child(13) { animation-delay: 0.65s; }
+    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .release-dot { position: absolute; left: 0; top: 0.35rem; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--bg-deep); }
+    .release-dot.app { background: var(--teal); box-shadow: 0 0 8px var(--teal-glow); }
+    .release-dot.backend { background: var(--purple); box-shadow: 0 0 8px rgba(124,58,237,0.3); }
+    .release-dot.hardware { background: var(--orange); box-shadow: 0 0 8px rgba(251,146,60,0.3); }
+    .release-dot.payment { background: var(--blue); box-shadow: 0 0 8px rgba(96,165,250,0.3); }
+    .release-header { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .release-version { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 600; }
+    .release-tag { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.6rem; border-radius: 100px; border: 1px solid; }
+    .release-tag.app { color: var(--teal); border-color: rgba(20,184,166,0.3); background: rgba(20,184,166,0.08); }
+    .release-tag.backend { color: var(--purple); border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.08); }
+    .release-tag.hardware { color: var(--orange); border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.08); }
+    .release-tag.payment { color: var(--blue); border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); }
+    .release-date { font-size: 0.8rem; color: var(--text-muted); margin-left: auto; }
+    .release-body { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; transition: border-color 0.3s; }
+    .release-body:hover { border-color: var(--border-accent); }
+    .change-group { margin-bottom: 1rem; } .change-group:last-child { margin-bottom: 0; }
+    .change-group-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+    .change-group-label.added { color: var(--green); } .change-group-label.fixed { color: var(--blue); } .change-group-label.changed { color: var(--orange); }
+    .change-item { font-size: 0.9rem; color: var(--text-dim); padding: 0.3rem 0; padding-left: 1.2rem; position: relative; line-height: 1.5; }
+    .change-item::before { content: '›'; position: absolute; left: 0; color: var(--text-muted); font-weight: 600; }
+    .change-item strong { color: var(--text); font-weight: 500; }
+    .quick-links { margin-top: 3rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .quick-link { display: flex; align-items: center; gap: 0.6rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; text-decoration: none; color: var(--text); font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+    .quick-link:hover { border-color: var(--teal-dim); transform: translateY(-1px); background: var(--bg-card-hover); }
+    .quick-link span.icon { font-size: 1.2rem; } .quick-link span.arrow { margin-left: auto; color: var(--text-muted); font-size: 0.8rem; }
+    .footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 0.8rem; }
+    .footer a { color: var(--teal); text-decoration: none; } .footer a:hover { text-decoration: underline; }
+    @media (max-width: 600px) { .header h1 { font-size: 1.8rem; } .versions { grid-template-columns: 1fr; } .quick-links { grid-template-columns: 1fr; } .release-date { margin-left: 0; width: 100%; margin-top: 0.25rem; } }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-mark">TSE-X Platform</div>
+      <h1>What's New</h1>
+      <p>Every update to the TSE-X ecosystem — app, backend, devices, and payments.</p>
+    </div>
+    <div class="versions">
+      <div class="version-card">
+        <div class="version-label">Mobile App</div>
+        <div class="version-number">1.2.5</div>
+        <div class="version-date">Apr 12, 2026</div>
+      </div>
+      <div class="version-card">
+        <div class="version-label">Backend API</div>
+        <div class="version-number">1.2.1</div>
+        <div class="version-date">Apr 12, 2026</div>
+      </div>
+      <div class="version-card">
+        <div class="version-label">Arduino Library</div>
+        <div class="version-number">1.5.0</div>
+        <div class="version-date">Mar 20, 2026</div>
+      </div>
+    </div>
+    <div class="filters">
+      <button class="filter-btn active" onclick="filterReleases('all')">All</button>
+      <button class="filter-btn" onclick="filterReleases('app')">📱 App</button>
+      <button class="filter-btn" onclick="filterReleases('backend')">🌐 Backend</button>
+      <button class="filter-btn" onclick="filterReleases('hardware')">🔌 Hardware</button>
+      <button class="filter-btn" onclick="filterReleases('payment')">💳 Payments</button>
+    </div>
+    <div class="timeline" id="timeline">
+
+      <!-- APP 1.2.5 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.5</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Apr 12, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Receipt History Page</strong> — New page showing all past payment receipts from Firestore with tap-to-expand detail view, PDF download, and email options</div>
+            <div class="change-item"><strong>Firestore Receipt Storage</strong> — Every payment receipt (bike lock, coffee maker, prize draw) automatically saved to users/{uid}/receipts subcollection</div>
+            <div class="change-item"><strong>Payment Timeout Countdown</strong> — 10-second circular countdown when returning to app while wallet approval is pending; auto-cancels and shows Try Again button</div>
+            <div class="change-item"><strong>Try Again Button</strong> — After timeout, shows hint: "If hanging persists, please reconnect your wallet to refresh session"</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>End Session Confirmation</strong> — Restored confirmation dialog for bike lock and coffee maker with Keep/End Now options</div>
+            <div class="change-item"><strong>Bike Lock Receipt</strong> — Receipt now correctly displays after ending a bike lock session (demo and real BLE)</div>
+            <div class="change-item"><strong>Previous Winners Display</strong> — W15 winner was missing due to backend query issue; fixed in prizedraw.js</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Payment countdown now starts when user returns to app, not when Phantom launches</div>
+            <div class="change-item">"Waiting for wallet approval" text hidden when Try Again button is shown</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.2.1 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.1</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Apr 12, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Previous Winners Query</strong> — Removed limitToLast(5) from Firestore winners query which was cutting off recent winners alphabetically by wallet address</div>
+            <div class="change-item"><strong>Google Sheet Row Overwrite</strong> — Added insertDataOption: INSERT_ROWS to Cloud Function append calls; concurrent signups were overwriting the same row</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Firestore Receipt Rules</strong> — Security rules updated to allow users/{userId}/receipts/{receiptId} read/write for authenticated users</div>
+            <div class="change-item"><strong>New User Registry Sheet</strong> — Migrated to TSE-X User Registry v2 to resolve persistent row overwrite issues</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP 1.2.4 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.4</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Mar 20, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Dynamic Multi-Price Selection</strong> — Devices can offer multiple pricing tiers (e.g. 10 min, 30 min, 1 hour). Price options shown inline on the device dashboard before payment</div>
+            <div class="change-item"><strong>Registry-Driven Pricing</strong> — App fetches device prices from the TSE-X Device Registry at page load and uses them for all payment methods</div>
+            <div class="change-item"><strong>BLE Device ID Persistence</strong> — After first BLE connection, device MAC address is saved to backend so future payments reconnect directly without scanning</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>BLE Reconnect After Phantom</strong> — App now stores BLE device ID in local widget state before payment, surviving the pendingTransaction clear that previously caused scan timeouts</div>
+            <div class="change-item"><strong>Price Display on Load</strong> — TSE price now re-fetches after device prices load, showing correct amount immediately instead of default $0.15</div>
+            <div class="change-item"><strong>USDC Payment Routing</strong> — Payments now route to device operator's registered wallet instead of platform wallet</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.2.0 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.0</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Mar 20, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Device Pricing Module</strong> — New deviceprices.js module with full REST API for managing multiple prices per device (GET, POST, PUT, DELETE)</div>
+            <div class="change-item"><strong>TSE-X Device Registry</strong> — Web-based operator dashboard at tse-sol.github.io/tse-x-updates/registry.html with Firebase Auth, QR code generation, and Arduino file download</div>
+            <div class="change-item"><strong>Multi-Price Support</strong> — Each price item supports name, description, USD price, duration (minutes), and image URL</div>
+            <div class="change-item"><strong>BLE Device ID Storage</strong> — App reports BLE MAC address after first connection; backend stores it for direct reconnect</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Device Registration</strong> — /devices/register now saves all fields: deviceName, deviceType, model, firmwareVersion, solanaWalletAddress, baseWalletAddress</div>
+            <div class="change-item"><strong>Payment Routing</strong> — All 3 challenge endpoints (TSE, USDC Base, USDC Solana) now route to device operator's registered wallet, falling back to platform wallet if none set</div>
+            <div class="change-item"><strong>BLE Heartbeat for BLE-Only Devices</strong> — App-sourced heartbeats (source: 'app') bypass secret requirement, allowing claimed BLE-only devices to be verified without WiFi</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HARDWARE 1.5.0 -->
+      <div class="release" data-category="hardware">
+        <div class="release-dot hardware"></div>
+        <div class="release-header">
+          <span class="release-version">v1.5.0</span>
+          <span class="release-tag hardware">Arduino Library</span>
+          <span class="release-date">Mar 20, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>USDC/MetaMask Unlock</strong> — BikeLock no longer shows "Payment Error / No TX" for USDC payments. Unlock now accepted for any valid duration regardless of txHash format, since payment is already verified by the backend before the BLE command is sent</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Unlock action uses "verified" as fallback txHash when payment method doesn't return a transaction hash (e.g. MetaMask USDC)</div>
+          </div>
+        </div>
+      </div>
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.3</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Mar 14, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Weekly Prize Draw</strong> — Automatic Saturday draw with winner announced via push notification</div>
+            <div class="change-item"><strong>Live Prize Pool Widget</strong> — Displays current pot value with stored winner amount from Firestore (unaffected by pot refills)</div>
+            <div class="change-item"><strong>Device Photo Upload</strong> — Operators can upload photos for their listed devices</div>
+            <div class="change-item"><strong>Privacy Policy</strong> — Published at tse-sol.github.io/tse-x-updates/privacy-policy.html</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Google Sign-In (Android)</strong> — Silent failure resolved by adding Play App Signing SHA fingerprints to Firebase</div>
+            <div class="change-item"><strong>Android Deep Link Handling</strong> — GoRouter was intercepting tsex:// callbacks; fixed via MainActivity interception</div>
+            <div class="change-item"><strong>Android BLE Scanning</strong> — Removed UUID filter; now uses name-prefix filtering for reliable device discovery</div>
+            <div class="change-item"><strong>Wallet Session Corruption</strong> — Detects corrupted Phantom session keys and forces clean disconnect instead of hanging</div>
+            <div class="change-item"><strong>Navigation Crash</strong> — GoRouter double-slash crash on ResumeSession and CodeCreator pages resolved</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Build system fully automated via restore script — handles all patches, signing, and platform configs in a single run</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.1.2 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.1.2</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Mar 14, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Prize Draw System</strong> — Automatic weekly draw every Saturday midnight UTC</div>
+            <div class="change-item"><strong>Winner Logging</strong> — Winners recorded to Google Sheets with wallet, amount, and timestamp</div>
+            <div class="change-item"><strong>Public Winners Ledger</strong> — Separate tab auto-published via Google Sheets publish-to-web</div>
+            <div class="change-item"><strong>Catch-up Draw</strong> — Server detects and runs any overdue weekly draws on startup</div>
+            <div class="change-item"><strong>Manual Draw Endpoint</strong> — POST /api/prize-draw/draw for admin-triggered draws</div>
+            <div class="change-item"><strong>Stored Winner Amount</strong> — /pot endpoint returns winnerAmount from Firestore so pot refills don't affect displayed prize</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">/pot endpoint now returns stored winnerAmount from Firestore instead of calculating from live balance</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP 1.2.2 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.2</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Feb 21, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Referral Code Input</strong> — Enter a referral code during sign-up on the Create Account tab</div>
+            <div class="change-item"><strong>Referral Validation</strong> — Prevents self-referral, duplicate use, and invalid codes</div>
+            <div class="change-item"><strong>Email Verification</strong> — New users must verify email before accessing the app</div>
+            <div class="change-item"><strong>Verify Email Page</strong> — Dedicated page with resend button and real-time verification check</div>
+            <div class="change-item"><strong>Forgot Password</strong> — Reset password via email from the Log In tab</div>
+            <div class="change-item"><strong>Custom SMTP</strong> — Emails sent from branded Gmail instead of Firebase default</div>
+            <div class="change-item"><strong>User Registry</strong> — Google Sheets auto-tracking via Cloud Functions (create, update, delete)</div>
+            <div class="change-item"><strong>Live Profile Data</strong> — Referral count streams in real-time from Firestore</div>
+            <div class="change-item"><strong>Welcome Greeting</strong> — Personalized "Welcome back" message on home screen</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Display Name Save</strong> — Was writing blank values; now reads from text field correctly</div>
+            <div class="change-item"><strong>Navigation After Sign-Up</strong> — Expired Firestore rules blocked referral writes</div>
+            <div class="change-item"><strong>Referral Count</strong> — Security rules prevented cross-user reads for referral queries</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Sign-up flow routes through Email Verification before wallet connection</div>
+            <div class="change-item">Delete account now removes Firestore document before auth user</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.1.1 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.1.1</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Feb 21, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Payment Flow Hanging</strong> — Transaction submit no longer blocks waiting for Solana confirmation (5-30+ sec)</div>
+            <div class="change-item"><strong>Non-blocking Confirmation</strong> — Returns immediately after submit; confirmation runs in background (fire-and-forget)</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Solana verification retries increased from 3→5 with 3s delay for better reliability</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP 1.2.1 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.1</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Feb 15, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Firebase Authentication</strong> — Email/password, Google, and Apple sign-in</div>
+            <div class="change-item"><strong>Profile Page</strong> — Edit display name, avatar, view referral code and connected wallets</div>
+            <div class="change-item"><strong>Avatar System</strong> — 12 custom crypto-themed preset avatars with bottom sheet picker</div>
+            <div class="change-item"><strong>Referral System</strong> — Auto-generated unique referral codes on sign-up with tracking</div>
+            <div class="change-item"><strong>Account Management</strong> — Save profile changes, sign out, and delete account (App Store compliant)</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item">Auth flow no longer allows sign-in without an existing account</div>
+            <div class="change-item">Google Sign-In on iOS — added REVERSED_CLIENT_ID URL scheme for proper redirect</div>
+            <div class="change-item">Profile image persists across sessions via Firestore</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP 1.2.0 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.0</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Feb 7, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Android Support</strong> — App now builds and runs on Android alongside iOS</div>
+            <div class="change-item"><strong>Android Deep Linking</strong> — tsex:// scheme for Phantom/MetaMask callbacks</div>
+            <div class="change-item"><strong>Android NFC &amp; BLE</strong> — Full device discovery and communication on Android</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item">Resolved Kotlin plugin compatibility blocking Android builds</div>
+            <div class="change-item">Android MainActivity properly handles wallet deep link callbacks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.1.0 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.1.0</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Feb 7, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Public Stats API</strong> — /api/stats, /api/transactions, /api/leaderboard endpoints</div>
+            <div class="change-item"><strong>Transaction Logging</strong> — All payments logged with chain, token, amount, and wallet</div>
+            <div class="change-item"><strong>Stats Widget</strong> — Embeddable HTML widget for live payment stats</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAYMENT 1.0.0 -->
+      <div class="release" data-category="payment">
+        <div class="release-dot payment"></div>
+        <div class="release-header">
+          <span class="release-version">v1.0.0</span>
+          <span class="release-tag payment">X402 Protocol</span>
+          <span class="release-date">Jan 30, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>X402 Payment Standard</strong> — Full x402scan and ZauthX402 facilitator support</div>
+            <div class="change-item"><strong>Dual Network Payments</strong> — TSE on Solana + USDC on Base from the same app</div>
+            <div class="change-item"><strong>402 Status Responses</strong> — Standardized payment-required responses with accepts array</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Backend handles both x402scan and Zauth X-PAYMENT header formats</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HARDWARE 1.4.0 -->
+      <div class="release" data-category="hardware">
+        <div class="release-dot hardware"></div>
+        <div class="release-header">
+          <span class="release-version">v1.4.0</span>
+          <span class="release-tag hardware">Arduino Library</span>
+          <span class="release-date">Jan 16, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Coffee Machine Example</strong> — Touchscreen UI with hot/iced selection and brewing flow</div>
+            <div class="change-item"><strong>Non-blocking HTTP</strong> — Touch events stay responsive during payment polling</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item">BLE not broadcasting — added setAdvertisedService() before advertise()</div>
+            <div class="change-item">HTTP -3 timeout errors — added reconnection logic for Render cold starts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HARDWARE 1.3.0 -->
+      <div class="release" data-category="hardware">
+        <div class="release-dot hardware"></div>
+        <div class="release-header">
+          <span class="release-version">v1.3.0</span>
+          <span class="release-tag hardware">Arduino Library</span>
+          <span class="release-date">Jan 14, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>BikeLock Memory Optimization</strong> — Replaced String objects with fixed char[] buffers</div>
+            <div class="change-item">LCD screen corruption after ~20 min caused by heap fragmentation — resolved</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">All function signatures changed from String to const char* for stability</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 0.9.1 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v0.9.1</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Jan 14, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Persistent Storage</strong> — Device data survives Render deploys via disk mount</div>
+            <div class="change-item"><strong>GeckoTerminal Pricing</strong> — Free price API with DexScreener + CoinGecko fallback</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item">Devices no longer lost on every backend deploy</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP 1.1.0 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.1.0</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Dec 15, 2025</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Wallet Persistence</strong> — Phantom, MetaMask, and Base wallets survive app restarts</div>
+            <div class="change-item"><strong>Smart Reconnect</strong> — App checks saved sessions on startup, skips re-connect if valid</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP 1.0.0 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.0.0</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Dec 4, 2025</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Phantom Wallet</strong> — Connect Solana wallet via deep linking</div>
+            <div class="change-item"><strong>MetaMask Wallet</strong> — Connect Base/Ethereum wallet</div>
+            <div class="change-item"><strong>NFC + QR Discovery</strong> — Tap or scan to find TSE-X devices</div>
+            <div class="change-item"><strong>BLE Communication</strong> — Bluetooth connection to Arduino-powered devices</div>
+            <div class="change-item"><strong>Device Dashboard</strong> — Coffee Machine and Bike Lock interfaces</div>
+            <div class="change-item"><strong>Crypto Payments</strong> — TSE on Solana, USDC on Base</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="quick-links">
+      <a href="https://tse-sol.github.io/tse-assets/stats.html" class="quick-link" target="_blank">
+        <span class="icon">📊</span> Live Stats Dashboard <span class="arrow">→</span>
+      </a>
+      <a href="https://github.com/TSE-Sol/tse-x-arduino-library" class="quick-link" target="_blank">
+        <span class="icon">🔧</span> Arduino Library <span class="arrow">→</span>
+      </a>
+      <a href="https://discord.gg/X9cTmzW2Gz" class="quick-link" target="_blank">
+        <span class="icon">💬</span> Discord Community <span class="arrow">→</span>
+      </a>
+      <a href="https://x.com/T_S_E_Sol" class="quick-link" target="_blank">
+        <span class="icon">🐦</span> Twitter / X <span class="arrow">→</span>
+      </a>
+      <a href="https://tse-sol.github.io/tse-x-updates/privacy-policy.html" class="quick-link" target="_blank">
+        <span class="icon">🔒</span> Privacy Policy <span class="arrow">→</span>
+      </a>
+    </div>
+    <div class="footer">
+      <p>Built by <a href="https://github.com/TSE-Sol" target="_blank">TSE-Sol</a> · Pay anything, anywhere, with crypto.</p>
+      <p style="margin-top:0.4rem;">📧 <a href="/cdn-cgi/l/email-protection#77031f120418141e161b120f0712051e1a12190304181b37101a161e1b5914181a"><span class="__cf_email__" data-cfemail="ef9b878a9c808c868e838a979f8a9d86828a819b9c8083af88828e8683c18c8082">[email&#160;protected]</span></a></p>
+    </div>
+  </div>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    function filterReleases(category) {
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      document.querySelectorAll

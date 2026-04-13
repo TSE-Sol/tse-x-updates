@@ -4,7 +4,24 @@ All notable changes to the TSE-X mobile application.
 
 ---
 
-## [1.2.4] - 2026-03-20
+## [1.2.5] - 2026-04-12
+
+### Added
+- **Receipt History Page** — New page showing all past payment receipts pulled from Firestore, with tap-to-expand detail view, PDF download, and email options
+- **Firestore Receipt Storage** — Every payment receipt (bike lock, coffee maker, prize draw) automatically saved to `users/{uid}/receipts` subcollection for permanent history
+- **Payment Timeout Countdown** — 10-second circular countdown appears when returning to app while wallet approval is pending; auto-cancels and shows Try Again button when timer ends
+- **Try Again Button** — After payment timeout, shows reconnect hint: "If hanging persists, please reconnect your wallet to refresh session"
+
+### Fixed
+- **End Session Confirmation** — Restored confirmation dialog for bike lock ("End your session early?") and coffee maker ("Stop brewing early?") with Keep/End Now options
+- **Bike Lock Receipt** — Receipt now correctly displays after ending a bike lock session (both demo and real BLE devices)
+- **Previous Winners Display** — W15 winner was missing due to `limitToLast` query cutting off by wallet address alphabetically; fixed in backend
+
+### Changed
+- Payment countdown now starts when user **returns to app** (on resume), not when Phantom is launched
+- "Waiting for wallet approval" text hidden when Try Again button is shown
+
+
 
 ### Added
 - **Dynamic Multi-Price Selection** — Devices can offer multiple pricing tiers (e.g. 10 min $0.10, 30 min $0.30, 1 hour $0.50). Price options shown inline on the device dashboard before payment

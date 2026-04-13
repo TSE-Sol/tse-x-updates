@@ -1,6 +1,16 @@
 # TSE-X Backend Changelog
 
-## [1.2.0] - 2026-03-20
+## [1.2.1] - 2026-04-12
+
+### Fixed
+- **Previous Winners Query** — Removed `limitToLast(5)` from Firestore winners query which was cutting off recent winners when ordered by wallet address alphabetically. Now fetches all winners and sorts/slices in JavaScript by weekId
+- **Google Sheet Append** — Added `insertDataOption: INSERT_ROWS` to Sheets API append calls in Cloud Functions; previously concurrent signups were overwriting the same row due to cached row position
+- **Google Sheet New Sheet** — Migrated to new TSE-X User Registry v2 sheet (ID: 1TD0VA4wLiR0TcoLWg9iD5--WtfmZqhRn4AeMMrEKnQI) to resolve persistent row overwrite issues
+
+### Added
+- **Firestore Receipt Subcollection Rules** — Updated security rules to allow `users/{userId}/receipts/{receiptId}` read/write for authenticated users
+
+
 
 ### Added
 - **Device Pricing Module (`deviceprices.js`)** — New module with full REST API for managing multiple prices per device
