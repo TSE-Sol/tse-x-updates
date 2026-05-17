@@ -1,5 +1,47 @@
 # TSE-X Backend Changelog
 
+## [1.3.0] - 2026-05-17
+
+### Added
+- **Prize Draw Entry Safety Net** — New Cloud Function `recordPrizeDrawEntryOnPaymentConfirm` fires on `pendingPayments` status `confirmed` for `TSE-PRIZE-DRAW`. Idempotently creates missing entries or patches null `txHash` so prize draw entries are now app-independent and self-healing — even if the FlutterFlow `/enter` call fails entirely, the server-side safety net catches it
+- **Webhook Confirm Integration** — `/x402/verify` endpoint now calls `webhook.confirmPendingPayment()` after issuing access token, flipping `pendingPayments` docs to `status: 'confirmed'` for ALL devices (prize draw, bikes, coffee makers, anything using `/x402/:deviceId/verify`)
+- **Wallet Address Case Preservation** — `webhook.js` now stores `walletAddressOriginal` alongside the lowercased `walletAddress` so the original case is preserved for downstream consumers while internal matching stays case-insensitive
+- **Backfill Scripts** — `backfill_prize_draw_entries.js` and `fix_historical_null_txhash.js` for one-time historical data repair (4 W19 entries left as-is — txHash unrecoverable from pendingPayments because pre-fix)
+
+### Fixed
+- **Null txHash on Prize Draw Entries** — Server-side safety net now patches `null` txHash values on existing entries when payment confirms, in addition to creating missing entries
+- **Coexistence with FlutterFlow `/enter`** — Safety net is fully idempotent and coexists with the FlutterFlow `/api/prize-draw/enter` call. No double-credit possible: whichever writes first wins, the other is a no-op
+
+---
+
+## [1.2.3] - 2026-05-05
+
+### Added
+- **Notification Broadcast Endpoint** — `POST /api/prize-draw/broadcast` for sending push notifications to all opted-in users (requires `ADMIN_NOTIFICATION_SECRET` env var)
+- **Scheduled Notifications** — Cron-based notification system firing every 10 minutes with deduplication to handle server restart timing issues; sends prize pool updates and draw reminders
+- **`getPotBalance()` Helper** — Pulls real-time TSE balance from the pot wallet so notification messages always reflect the current pot value, not a stale stored amount
+- **Global Notifications Collection** — Every notification sent is saved to the `notifications` Firestore collection for the in-app Notification Center to read from
+- **FCM Token Subcollection** — FCM tokens now stored in `users/{uid}/fcm_tokens` subcollection (one doc per device) for multi-device push delivery
+
+### Fixed
+- **Deprecated FCM API** — Replaced `sendMulticast` with `sendEachForMulticast` (the new Firebase Admin SDK API); old call was throwing deprecation warnings and would have broken on the next SDK upgrade
+- **Multi-Wallet Draw Abuse** — Prize draw `/status` and `/enter` endpoints now check BOTH `walletAddress` AND `userId` to prevent the same user from entering multiple times with different wallets
+
+---
+
+## [1.2.2] - 2026-04-25
+
+### Added
+- **Vonage SMS OTP Endpoints** — `POST /sms/send-otp` returns `{requestId}`, `POST /sms/verify-otp` accepts `{requestId, code}` and returns `{success}`. Uses Vonage Verify API (key `8276042b`, phone `+12088340666`)
+- **Blocklist Collections** — `blockedEmails` and `blockedWallets` Firestore collections store banned scammers; signup flow queries these before account creation
+- **Ban Operation Infrastructure** — One-shot script `ban_scammers.js` for bulk banning (deletes Firebase Auth user, removes Firestore doc, adds to both blocklists)
+
+### Fixed
+- **`onUserCreated` Cloud Function** — Silent Eventarc permissions failure had stopped the function from firing since February; redeployed with fresh permissions and backfill run to catch missed users
+- **Google Sheet INSERT_ROWS Persistence** — `insertDataOption: INSERT_ROWS` now applied consistently across all Sheets API append calls in Cloud Functions
+
+---
+
 ## [1.2.1] - 2026-04-12
 
 ### Fixed
@@ -10,7 +52,9 @@
 ### Added
 - **Firestore Receipt Subcollection Rules** — Updated security rules to allow `users/{userId}/receipts/{receiptId}` read/write for authenticated users
 
+---
 
+## [1.2.0] - 2026-03-20
 
 ### Added
 - **Device Pricing Module (`deviceprices.js`)** — New module with full REST API for managing multiple prices per device
@@ -205,4 +249,11 @@ Returns: Server info, payment options, ownership proofs
 ```
 POST /api/prize-draw/draw    # Manual draw trigger
 GET  /api/prize-draw/pot     # Current pot + stored winner amount
+POST /api/prize-draw/broadcast # Push notification broadcast (admin)
+```
+
+### SMS / OTP
+```
+POST /sms/send-otp           # Vonage Verify: send OTP to phone
+POST /sms/verify-otp         # Vonage Verify: verify entered code
 ```

@@ -95,13 +95,13 @@
     <div class="versions">
       <div class="version-card">
         <div class="version-label">Mobile App</div>
-        <div class="version-number">1.2.4</div>
-        <div class="version-date">Mar 20, 2026</div>
+        <div class="version-number">1.2.7</div>
+        <div class="version-date">May 17, 2026</div>
       </div>
       <div class="version-card">
         <div class="version-label">Backend API</div>
-        <div class="version-number">1.2.0</div>
-        <div class="version-date">Mar 20, 2026</div>
+        <div class="version-number">1.3.0</div>
+        <div class="version-date">May 17, 2026</div>
       </div>
       <div class="version-card">
         <div class="version-label">Arduino Library</div>
@@ -117,6 +117,191 @@
       <button class="filter-btn" onclick="filterReleases('payment')">💳 Payments</button>
     </div>
     <div class="timeline" id="timeline">
+
+      <!-- APP 1.2.7 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.7</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">May 17, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Notification Center</strong> — In-app panel with Unread/Read tabs, badge count, and tap-to-expand modal with animated transitions</div>
+            <div class="change-item"><strong>Swipe to Dismiss</strong> — Swipe any notification left to dismiss; per-user dismissed state persisted in Firestore across sessions and devices</div>
+            <div class="change-item"><strong>Mass Select &amp; Dismiss</strong> — Long-press or tap Select to enter selection mode, Select All for the current tab, dismiss multiple at once</div>
+            <div class="change-item"><strong>Per-User Read Tracking</strong> — Each notification's read state stored in users/{uid}/notificationPrefs/state; tap to mark only that one read, or use Mark All Read</div>
+            <div class="change-item"><strong>Phantom Wallet Health Check</strong> — Background check every 3 minutes and on app resume detects expired sessions and prompts reconnect before payments fail</div>
+            <div class="change-item"><strong>Solscan / BaseScan Links</strong> — Receipt History now includes a direct link to the on-chain transaction for every payment</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Notification Persistence</strong> — Dismissed and read state no longer resets when the app is reopened; load order waits for Firestore state before rendering</div>
+            <div class="change-item"><strong>Notification Body in List</strong> — Cleaned up list view to show only title and timestamp; full message moved to the tap-to-expand modal</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Payment countdown timer extended from 10s to 30s to give wallet approval more time before showing Try Again</div>
+            <div class="change-item">Notification read state migrated from SharedPreferences to Firestore for cross-device consistency</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.3.0 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.3.0</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">May 17, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Prize Draw Entry Safety Net</strong> — New Cloud Function recordPrizeDrawEntryOnPaymentConfirm fires on pendingPayments confirmed for TSE-PRIZE-DRAW. Idempotently creates missing entries or patches null txHash — entries are now app-independent and self-healing</div>
+            <div class="change-item"><strong>Webhook Confirm Integration</strong> — /x402/verify endpoint now calls webhook.confirmPendingPayment() after issuing access token, flipping pendingPayments docs to status: 'confirmed' for ALL devices</div>
+            <div class="change-item"><strong>Wallet Address Case Preservation</strong> — webhook.js stores walletAddressOriginal alongside the lowercased walletAddress so original case is preserved while internal matching stays case-insensitive</div>
+            <div class="change-item"><strong>Backfill Scripts</strong> — backfill_prize_draw_entries.js and fix_historical_null_txhash.js for one-time historical data repair</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Null txHash on Prize Draw Entries</strong> — Server-side safety net now patches null txHash values on existing entries when payment confirms, in addition to creating missing entries</div>
+            <div class="change-item"><strong>Coexistence with FlutterFlow /enter</strong> — Safety net is fully idempotent and coexists with the FlutterFlow call. No double-credit possible — whichever writes first wins, the other is a no-op</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.2.3 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.3</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">May 5, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Notification Broadcast Endpoint</strong> — POST /api/prize-draw/broadcast sends push notifications to all opted-in users (requires ADMIN_NOTIFICATION_SECRET)</div>
+            <div class="change-item"><strong>Scheduled Notifications</strong> — Cron-based system firing every 10 minutes with deduplication for prize pool updates and draw reminders</div>
+            <div class="change-item"><strong>getPotBalance() Helper</strong> — Pulls real-time TSE balance from the pot wallet so notification messages always reflect the current pot value</div>
+            <div class="change-item"><strong>Global Notifications Collection</strong> — Every notification sent is saved to the notifications Firestore collection for the in-app Notification Center</div>
+            <div class="change-item"><strong>FCM Token Subcollection</strong> — FCM tokens now stored in users/{uid}/fcm_tokens (one doc per device) for multi-device push delivery</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Deprecated FCM API</strong> — Replaced sendMulticast with sendEachForMulticast (new Firebase Admin SDK API)</div>
+            <div class="change-item"><strong>Multi-Wallet Draw Abuse</strong> — Prize draw status and enter endpoints now check BOTH walletAddress AND userId to prevent the same user from entering multiple times with different wallets</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP 1.2.6 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.6</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Apr 25, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Light / Dark Mode Toggle</strong> — New toggle on the Profile page; preference persists across app restarts via isDarkMode App State + setThemeMode custom action</div>
+            <div class="change-item"><strong>Dynamic Mode Label</strong> — Toggle label updates between "Dark Mode" and "Light Mode" based on current state</div>
+            <div class="change-item"><strong>Vonage SMS OTP Verification</strong> — Phone number verification flow added to sign-up via Vonage Verify API; new VerifyPhone and VerificationCode pages collect and verify the user's phone after email verification</div>
+            <div class="change-item"><strong>Phone Duplicate Check</strong> — Firestore query checks for existing phone numbers before sending an OTP, preventing the same number on multiple accounts</div>
+            <div class="change-item"><strong>phoneVerified Login Conditional</strong> — Login flow routes unverified users to VerifyPhone instead of DeviceEntryPage</div>
+            <div class="change-item"><strong>Signup Blocklist Check</strong> — New accounts cannot be created with emails or wallets in the blockedEmails / blockedWallets collections; applies to email, Google, and Apple sign-up</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Light Mode Coverage</strong> — Light theme colors fixed across most pages; Device Dashboard and parts of the TSE-X Drawing page remain dark by design due to custom widget limitations</div>
+            <div class="change-item"><strong>Scammer Ban Operation</strong> — 56 confirmed dumpers banned: Firebase Auth deleted, Firestore docs removed, emails and wallets added to blocklists</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Phone numbers stored without + prefix (digits only) to prevent formatting issues with Vonage Verify API</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.2.2 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.2</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Apr 25, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Vonage SMS OTP Endpoints</strong> — POST /sms/send-otp returns {requestId}, POST /sms/verify-otp returns {success}. Uses Vonage Verify API</div>
+            <div class="change-item"><strong>Blocklist Collections</strong> — blockedEmails and blockedWallets Firestore collections store banned scammers; signup flow queries these before account creation</div>
+            <div class="change-item"><strong>Ban Operation Infrastructure</strong> — One-shot script ban_scammers.js for bulk banning (deletes Firebase Auth user, removes Firestore doc, adds to both blocklists)</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>onUserCreated Cloud Function</strong> — Silent Eventarc permissions failure had stopped the function from firing since February; redeployed with fresh permissions and backfill run to catch missed users</div>
+            <div class="change-item"><strong>Google Sheet INSERT_ROWS Persistence</strong> — insertDataOption: INSERT_ROWS now applied consistently across all Sheets API append calls in Cloud Functions</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP 1.2.5 -->
+      <div class="release" data-category="app">
+        <div class="release-dot app"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.5</span>
+          <span class="release-tag app">Mobile App</span>
+          <span class="release-date">Apr 12, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Receipt History Page</strong> — New page showing all past payment receipts from Firestore with tap-to-expand detail view, PDF download, and email options</div>
+            <div class="change-item"><strong>Firestore Receipt Storage</strong> — Every payment receipt (bike lock, coffee maker, prize draw) automatically saved to users/{uid}/receipts subcollection</div>
+            <div class="change-item"><strong>Payment Timeout Countdown</strong> — 10-second circular countdown when returning to app while wallet approval is pending; auto-cancels and shows Try Again button</div>
+            <div class="change-item"><strong>Try Again Button</strong> — After timeout, shows hint: "If hanging persists, please reconnect your wallet to refresh session"</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>End Session Confirmation</strong> — Restored confirmation dialog for bike lock and coffee maker with Keep/End Now options</div>
+            <div class="change-item"><strong>Bike Lock Receipt</strong> — Receipt now correctly displays after ending a bike lock session (demo and real BLE)</div>
+            <div class="change-item"><strong>Previous Winners Display</strong> — W15 winner was missing due to backend query issue; fixed in prizedraw.js</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label changed">Changed</div>
+            <div class="change-item">Payment countdown now starts when user returns to app, not when Phantom launches</div>
+            <div class="change-item">"Waiting for wallet approval" text hidden when Try Again button is shown</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKEND 1.2.1 -->
+      <div class="release" data-category="backend">
+        <div class="release-dot backend"></div>
+        <div class="release-header">
+          <span class="release-version">v1.2.1</span>
+          <span class="release-tag backend">Backend API</span>
+          <span class="release-date">Apr 12, 2026</span>
+        </div>
+        <div class="release-body">
+          <div class="change-group">
+            <div class="change-group-label fixed">Fixed</div>
+            <div class="change-item"><strong>Previous Winners Query</strong> — Removed limitToLast(5) from Firestore winners query which was cutting off recent winners alphabetically by wallet address</div>
+            <div class="change-item"><strong>Google Sheet Row Overwrite</strong> — Added insertDataOption: INSERT_ROWS to Cloud Function append calls; concurrent signups were overwriting the same row</div>
+          </div>
+          <div class="change-group">
+            <div class="change-group-label added">Added</div>
+            <div class="change-item"><strong>Firestore Receipt Rules</strong> — Security rules updated to allow users/{userId}/receipts/{receiptId} read/write for authenticated users</div>
+            <div class="change-item"><strong>New User Registry Sheet</strong> — Migrated to TSE-X User Registry v2 to resolve persistent row overwrite issues</div>
+          </div>
+        </div>
+      </div>
 
       <!-- APP 1.2.4 -->
       <div class="release" data-category="app">

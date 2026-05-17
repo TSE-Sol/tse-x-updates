@@ -4,6 +4,47 @@ All notable changes to the TSE-X mobile application.
 
 ---
 
+## [1.2.7] - 2026-05-17
+
+### Added
+- **Notification Center** — In-app notification panel with Unread/Read tabs, unread badge count, and tap-to-expand modal showing full message content with animated transitions
+- **Swipe to Dismiss** — Swipe any notification left to dismiss; per-user dismissed state persisted in Firestore so notifications stay hidden across sessions and devices
+- **Mass Select & Dismiss** — Long-press or tap Select to enter selection mode, Select All for the current tab, dismiss multiple notifications at once with count confirmation
+- **Per-User Read Tracking** — Each notification's read state stored individually in `users/{uid}/notificationPrefs/state` under `readIds`; tap a notification to mark only that one read, or use Mark All Read
+- **Phantom Wallet Health Check** — Background check every 3 minutes and on app resume that detects expired Phantom sessions and prompts the user to reconnect before payment attempts fail
+- **Solscan / BaseScan Transaction Links** — Receipt History now includes a direct link to the on-chain transaction on Solscan (Solana) or BaseScan (Base) for every payment
+
+### Fixed
+- **Notification Persistence** — Dismissed and read state no longer resets when the app is reopened; load order now waits for Firestore state to hydrate before rendering notifications
+- **Notification Body in List** — Cleaned up list view to show only title and timestamp; full message moved to the tap-to-expand modal
+
+### Changed
+- Payment countdown timer extended from 10s to 30s to give wallet approval more time before showing the Try Again button
+- Notification read state migrated from SharedPreferences to Firestore for cross-device consistency
+
+---
+
+## [1.2.6] - 2026-04-25
+
+### Added
+- **Light / Dark Mode Toggle** — New toggle on the Profile page switches between Light and Dark themes; preference persists across app restarts via `isDarkMode` App State and the `setThemeMode` custom action
+- **Dynamic Mode Label** — Toggle label updates between "Dark Mode" and "Light Mode" based on current state
+- **Vonage SMS OTP Verification** — Phone number verification flow added to sign-up via Vonage Verify API; new `VerifyPhone` and `VerificationCode` pages collect and verify the user's phone number after email verification
+- **Phone Duplicate Check** — Firestore query checks for existing phone numbers before sending an OTP, preventing the same number from being used on multiple accounts
+- **`phoneVerified` Login Conditional** — Login flow on SignOn page now routes unverified users to `VerifyPhone` instead of `DeviceEntryPage`
+- **Signup Blocklist Check** — New accounts cannot be created with emails or wallets in the `blockedEmails` / `blockedWallets` collections; applies to email, Google, and Apple sign-up flows
+- **End Session Confirmation Dialogs** — Bike lock ("End your session early?") and coffee maker ("Stop brewing early?") now show Keep / End Now confirmation before ending paid sessions
+
+### Fixed
+- **Light Mode Coverage** — Light theme colors fixed across most pages; Device Dashboard and parts of the TSE-X Drawing page remain dark by design due to custom widget limitations
+- **Scammer Ban Operation** — 56 confirmed dumpers banned from the platform: Firebase Auth accounts deleted, Firestore docs removed, emails and wallets added to blocklists, preventing re-registration
+
+### Changed
+- Phone numbers stored without `+` prefix (digits only) via TextField filter to prevent formatting issues with the Vonage Verify API
+- Hardcoded dark pages: BLEPage, QRPage, TSELottery, NFCPage, DeviceEntryPage, WalletConnectionPage (custom widget limitations)
+
+---
+
 ## [1.2.5] - 2026-04-12
 
 ### Added
@@ -21,7 +62,9 @@ All notable changes to the TSE-X mobile application.
 - Payment countdown now starts when user **returns to app** (on resume), not when Phantom is launched
 - "Waiting for wallet approval" text hidden when Try Again button is shown
 
+---
 
+## [1.2.4] - 2026-03-20
 
 ### Added
 - **Dynamic Multi-Price Selection** — Devices can offer multiple pricing tiers (e.g. 10 min $0.10, 30 min $0.30, 1 hour $0.50). Price options shown inline on the device dashboard before payment
