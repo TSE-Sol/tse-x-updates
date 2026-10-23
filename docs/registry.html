@@ -393,7 +393,7 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
     </nav>
     <div class="sidebar-footer">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.0.9</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);text-align:center;padding:4px 0;margin-bottom:4px;">Registry v1.1.0</div>
       <button onclick="toggleTheme()" id="theme-toggle" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:8px;" onmouseover="this.style.borderColor='rgba(36,81,209,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
         <span id="theme-icon">☀️</span>
         <span id="theme-label">Light Mode</span>
@@ -860,6 +860,14 @@ const ap = new OAuthProvider('apple.com');
 // Set _db immediately so loadProfile can use it
 window._db = { db, doc, getDoc, updateDoc };
 window._a = { auth, gp, ap, signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, signOut };
+// Build JSON headers including the signed-in vendor's Firebase ID token. The backend
+// requires this (plus the device secret) on all device-mutating calls.
+window._authHeaders = async function(extra){
+  const u = window._a.auth.currentUser;
+  if(!u) throw new Error('Please sign in first.');
+  const token = await u.getIdToken();
+  return Object.assign({ 'Content-Type':'application/json', 'Authorization':'Bearer '+token }, extra||{});
+};
 
 onAuthStateChanged(auth, u => {
   if (u) {
@@ -1194,7 +1202,7 @@ async function registerDevice(){
   if(!solanaWallet&&!baseWallet) return showAlert('reg-alert','error','At least one wallet address is required.');
   const btn=document.getElementById('reg-btn'); btn.innerHTML='<span class="spinner"></span> Registering...'; btn.disabled=true;
   try {
-    const res=await fetch(`${API}/devices/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId,deviceName,deviceType,model,firmwareVersion:firmware,solanaWalletAddress:solanaWallet,baseWalletAddress:baseWallet,ownerEmail:window._userEmail||''})});
+    const res=await fetch(`${API}/devices/register`,{method:'POST',headers: await window._authHeaders(),body:JSON.stringify({deviceId,deviceName,deviceType,model,firmwareVersion:firmware,solanaWalletAddress:solanaWallet,baseWalletAddress:baseWallet,ownerEmail:window._userEmail||''})});
     const data=await res.json();
     if(!data.success) throw new Error(data.error||'Registration failed');
     regDeviceId=data.deviceId; regDeviceSecret=data.deviceSecret;
@@ -1226,7 +1234,7 @@ async function saveRegPrices(){
   if(prices.length===0) return showAlert('reg-prices-alert','error','Add at least one pricing tier.');
   const btn=document.getElementById('reg-prices-btn'); btn.innerHTML='<span class="spinner"></span> Saving...'; btn.disabled=true;
   try {
-    const res=await fetch(`${API}/api/device-prices/${regDeviceId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret:regDeviceSecret,prices})});
+    const res=await fetch(`${API}/api/device-prices/${regDeviceId}`,{method:'POST',headers: await window._authHeaders(),body:JSON.stringify({deviceSecret:regDeviceSecret,prices})});
     const data=await res.json(); if(!data.success) throw new Error(data.error);
     // Update count in my devices
     saveMyDevice({deviceId:regDeviceId,deviceName:document.getElementById('reg-deviceName').value.trim(),deviceType:document.getElementById('reg-deviceType').value,registeredAt:new Date().toISOString(),priceCount:data.count});
@@ -1250,7 +1258,7 @@ async function loadPrices(){
     const data=await res.json(); if(!data.success) throw new Error(data.error);
 
     // Validate secret before showing anything
-    const validateRes=await fetch(`${API}/api/device-prices/${deviceId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret,prices:data.prices})});
+    const validateRes=await fetch(`${API}/api/device-prices/${deviceId}`,{method:'PUT',headers: await window._authHeaders(),body:JSON.stringify({deviceSecret,prices:data.prices})});
     const validateData=await validateRes.json();
     if(!validateData.success) throw new Error('Invalid Device Secret Key. Access denied.');
 
@@ -1278,7 +1286,7 @@ async function updatePrices(){
   if(prices.length===0) return showAlert('mgr-alert','error','Add at least one pricing tier.');
   const btn=document.getElementById('update-btn'); btn.innerHTML='<span class="spinner"></span> Saving...'; btn.disabled=true;
   try {
-    const res=await fetch(`${API}/api/device-prices/${deviceId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret,prices})});
+    const res=await fetch(`${API}/api/device-prices/${deviceId}`,{method:'PUT',headers: await window._authHeaders(),body:JSON.stringify({deviceSecret,prices})});
     const data=await res.json(); if(!data.success) throw new Error(data.error);
     toast(`${data.count} pricing tier(s) updated!`, 'success');
     showAlert('mgr-alert','success',`${data.count} pricing tier(s) updated successfully.`);
@@ -1339,7 +1347,7 @@ async function deleteDevice(){
   if(deviceId!==confirm) return showAlert('del-alert','error','Device ID confirmation does not match. Check for typos.');
   const btn=document.getElementById('del-btn'); btn.innerHTML='<span class="spinner"></span> Deleting...'; btn.disabled=true;
   try {
-    const res=await fetch(`${API}/api/device-prices/${deviceId}/device`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceSecret})});
+    const res=await fetch(`${API}/api/device-prices/${deviceId}/device`,{method:'DELETE',headers: await window._authHeaders(),body:JSON.stringify({deviceSecret})});
     const data=await res.json(); if(!data.success) throw new Error(data.error);
     removeMyDevice(deviceId);
     showAlert('del-alert','success',data.message);
@@ -1386,7 +1394,7 @@ async function claimDevice() {
   btn.innerHTML = '<span class="spinner"></span> Claiming...'; btn.disabled = true;
   try {
     const email = window._userEmail;
-    const res = await fetch(`${API}/devices/claim`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({deviceId, deviceSecret, ownerEmail: email})});
+    const res = await fetch(`${API}/devices/claim`, {method:'POST', headers: await window._authHeaders(), body:JSON.stringify({deviceId, deviceSecret, ownerEmail: email})});
     const data = await res.json();
     if(!data.success) throw new Error(data.error);
     saveMyDevice({deviceId: data.deviceId, deviceName: data.deviceName, deviceType: data.deviceType, registeredAt: new Date().toISOString(), priceCount: 0});
@@ -1410,7 +1418,7 @@ async function transferDevice() {
   const btn = document.getElementById('transfer-btn');
   btn.innerHTML = '<span class="spinner"></span> Transferring...'; btn.disabled = true;
   try {
-    const res = await fetch(`${API}/devices/transfer`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({deviceId, deviceSecret, newOwnerEmail: newEmail})});
+    const res = await fetch(`${API}/devices/transfer`, {method:'POST', headers: await window._authHeaders(), body:JSON.stringify({deviceId, deviceSecret, newOwnerEmail: newEmail})});
     const data = await res.json();
     if(!data.success) throw new Error(data.error);
     removeMyDevice(deviceId);
