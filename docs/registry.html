@@ -1155,7 +1155,11 @@ function copyArduinoConfig() {
 }
 
 // ===== PRICE ITEMS =====
+// Timed/session device types require a per-tier duration; others (Coffee, Vending) don't.
+function isTimedDeviceType(dt){ return ['Bike Lock','Power Outlet','EV Charger'].includes((dt||'').trim()); }
+function pfxDeviceType(pfx){ return pfx==='reg' ? (document.getElementById('reg-deviceType')?.value||'') : (window._mgrDeviceType||''); }
 function priceItemHtml(pfx,i,item={}) {
+  const _timed=isTimedDeviceType(pfxDeviceType(pfx));
   return `<div class="price-item" id="${pfx}-item-${i}">
     <div class="price-item-header">
       <span class="price-num">Tier ${i+1}</span>
@@ -1165,7 +1169,7 @@ function priceItemHtml(pfx,i,item={}) {
     <div class="fg"><label>Description</label><input type="text" id="${pfx}-desc-${i}" placeholder="Optional description" value="${item.description||''}"></div>
     <div class="price-grid">
       <div class="fg"><label>Price (USD) *</label><input type="number" id="${pfx}-price-${i}" placeholder="0.15" min="0.01" step="0.01" value="${item.priceUsd||''}"></div>
-      <div class="fg"><label>Duration (min)</label><input type="number" id="${pfx}-duration-${i}" placeholder="Optional" min="1" value="${item.duration||''}"></div>
+      <div class="fg"><label>Duration (min)${_timed?' *':''}</label><input type="number" id="${pfx}-duration-${i}" placeholder="${_timed?'Required':'Optional'}" min="1" value="${item.duration||''}"></div>
       <div class="fg"><label>Image URL</label><input type="text" id="${pfx}-image-${i}" placeholder="https://..." value="${item.image||''}"></div>
     </div>
   </div>`;
@@ -1174,15 +1178,19 @@ function addPriceItem(pfx){ document.getElementById(pfx+'-price-items').insertAd
 function rmPrice(pfx,i){ document.getElementById(pfx+'-item-'+i)?.remove(); }
 function collectPrices(pfx,alertId) {
   const prices=[];
+  const deviceType=pfxDeviceType(pfx);
+  const timed=isTimedDeviceType(deviceType);
   for(let i=0;i<pc[pfx];i++){
     const ne=document.getElementById(pfx+'-name-'+i); if(!ne) continue;
     const name=ne.value.trim(); if(!name) continue;
     const priceUsd=parseFloat(document.getElementById(pfx+'-price-'+i).value);
     if(!priceUsd||priceUsd<0.01){showAlert(alertId,'error',`"${name}": price must be at least $0.01`);return null;}
     const dur=document.getElementById(pfx+'-duration-'+i).value;
+    const durNum=dur?parseInt(dur):null;
+    if(timed && (!durNum || durNum<=0)){showAlert(alertId,'error',`"${name}": Duration (min) is required for ${deviceType} and must be greater than 0.`);return null;}
     const img=document.getElementById(pfx+'-image-'+i).value.trim();
     const desc=document.getElementById(pfx+'-desc-'+i).value.trim();
-    prices.push({name,description:desc||null,priceUsd,duration:dur?parseInt(dur):null,image:img||null});
+    prices.push({name,description:desc||null,priceUsd,duration:durNum,image:img||null});
   }
   return prices;
 }
@@ -1264,6 +1272,7 @@ async function loadPrices(){
     if(!validateData.success) throw new Error('Invalid Device Secret Key. Access denied.');
 
     // Secret valid — show prices
+    window._mgrDeviceType=data.deviceType||''; // so tier labels + save enforce timed-type duration
     const c=document.getElementById('mgr-price-items'); c.innerHTML=''; pc.mgr=0;
     if(data.prices.length>0){ data.prices.forEach(item=>{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr,item)); pc.mgr++; }); }
     else{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr)); pc.mgr++; }
