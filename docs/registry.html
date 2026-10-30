@@ -609,6 +609,21 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
             <div class="fg"><label>Base Wallet Address</label><input type="text" id="mgr-baseWallet" placeholder="0x..."></div>
             <button class="app-btn app-btn-primary" style="margin-bottom:8px;" onclick="saveWallets()" id="mgr-wallets-btn">Save Wallets</button>
             <div class="alert" id="mgr-wallets-alert" style="margin-bottom:16px;"></div>
+            <div id="mgr-outlet-section" style="display:none">
+              <hr class="divider">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <div class="card-title" style="margin:0;">Power Outlet Settings</div>
+                <div style="font-size:12px;color:var(--text-muted);">Applies in the app</div>
+              </div>
+              <label for="mgr-pauseAllowed" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;">
+                <input type="checkbox" id="mgr-pauseAllowed" style="width:18px;height:18px;accent-color:var(--accent,#3B82F6);cursor:pointer;">
+                <span>Allow users to <strong>pause</strong> power during a session (time is banked, not lost)</span>
+              </label>
+              <div class="fg"><label>Max session length (minutes, optional)</label><input type="number" id="mgr-maxCap" min="1" step="1" placeholder="Leave blank for no limit"></div>
+              <div style="font-size:12px;color:var(--text-muted);margin:-6px 0 12px;">Caps how much time a user can stack by adding tiers.</div>
+              <button class="app-btn app-btn-primary" style="margin-bottom:8px;" onclick="saveOutletSettings()" id="mgr-outlet-btn">Save Outlet Settings</button>
+              <div class="alert" id="mgr-outlet-alert" style="margin-bottom:16px;"></div>
+            </div>
             <hr class="divider">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
               <div class="card-title" style="margin:0;">Pricing Tiers</div>
@@ -1287,6 +1302,17 @@ async function loadPrices(){
     if(data.prices.length>0){ data.prices.forEach(item=>{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr,item)); pc.mgr++; }); }
     else{ c.insertAdjacentHTML('beforeend',priceItemHtml('mgr',pc.mgr)); pc.mgr++; }
     document.getElementById('mgr-prices-section').style.display='block';
+    // Power Outlet settings (pause / max cap) — only for Power Outlet devices
+    const isOutlet=(data.deviceType||'').toLowerCase()==='power outlet';
+    document.getElementById('mgr-outlet-section').style.display=isOutlet?'block':'none';
+    if(isOutlet){
+      hideAlert('mgr-outlet-alert');
+      let cfg={};
+      try{ const dres=await fetch(`${API}/devices/${deviceId}`); const d=await dres.json(); cfg=(d&&d.config)||{}; }catch(_){}
+      document.getElementById('mgr-pauseAllowed').checked=!!(cfg.pause&&cfg.pause.allowed);
+      const cap=Number(cfg.operatorMaxCapSeconds)||0;
+      document.getElementById('mgr-maxCap').value=cap>0?String(Math.round(cap/60)):'';
+    }
     // QR code
     const mgrQRData=buildQRData(data.deviceId,data.deviceName,data.deviceType,data.model||'',data.firmwareVersion||'1.0.0',data.solanaWalletAddress||'',data.baseWalletAddress||'');
     generateQR('mgr-qr-canvas',mgrQRData);
@@ -1333,6 +1359,37 @@ async function saveWallets(){
     showAlert('mgr-wallets-alert','success','Payment wallets updated successfully.');
   } catch(e){ showAlert('mgr-wallets-alert','error',e.message); toast(e.message,'error'); }
   finally{ btn.innerHTML='Save Wallets'; btn.disabled=false; }
+}
+
+// Power Outlet settings → PUT /api/device-prices/:id/settings { config }
+// Backend validates strictly: pause.allowed (bool), operatorMaxCapSeconds (positive int).
+// The app reads these back via /power-session (pauseAllowed, maxCapSeconds).
+async function saveOutletSettings(){
+  const deviceId=document.getElementById('mgr-deviceId').value.trim().toUpperCase();
+  const deviceSecret=document.getElementById('mgr-secret').value.trim();
+  hideAlert('mgr-outlet-alert');
+  if(!deviceSecret) return showAlert('mgr-outlet-alert','error','Device Secret Key is required to save changes.');
+  const allowed=document.getElementById('mgr-pauseAllowed').checked;
+  const capRaw=document.getElementById('mgr-maxCap').value.trim();
+  const config={pause:{allowed}};
+  if(capRaw!==''){
+    const capMin=Number(capRaw);
+    if(!Number.isInteger(capMin)||capMin<1) return showAlert('mgr-outlet-alert','error','Max session length must be a whole number of minutes (1 or more), or blank.');
+    config.operatorMaxCapSeconds=capMin*60;
+  }
+  const btn=document.getElementById('mgr-outlet-btn'); btn.innerHTML='<span class="spinner"></span> Saving...'; btn.disabled=true;
+  try {
+    const res=await fetch(`${API}/api/device-prices/${deviceId}/settings`,{method:'PUT',headers: await window._authHeaders(),body:JSON.stringify({deviceSecret,config})});
+    const data=await res.json(); if(!data.success) throw new Error(data.error||'Save failed');
+    const saved=(data.config)||config;
+    document.getElementById('mgr-pauseAllowed').checked=!!(saved.pause&&saved.pause.allowed);
+    const cap=Number(saved.operatorMaxCapSeconds)||0;
+    document.getElementById('mgr-maxCap').value=cap>0?String(Math.round(cap/60)):'';
+    const msg=`Pause ${allowed?'enabled':'disabled'}${cap>0?`, max session ${Math.round(cap/60)} min`:''}.`;
+    toast('Outlet settings saved!', 'success');
+    showAlert('mgr-outlet-alert','success',msg+' Users will see this in the app on their next session.');
+  } catch(e){ showAlert('mgr-outlet-alert','error',e.message); toast(e.message,'error'); }
+  finally{ btn.innerHTML='Save Outlet Settings'; btn.disabled=false; }
 }
 
 // ===== LOOKUP =====
