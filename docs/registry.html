@@ -135,6 +135,8 @@ select option{background:var(--bg3);}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;position:relative;overflow:hidden;}
 .card-accent{border-top:2px solid var(--blue);}
 .card-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;}
+#refund-list a{color:#60a5fa;}
+body.light-mode #refund-list a{color:var(--blue);}
 .card-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
 .section-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin:20px 0 12px;display:flex;align-items:center;gap:8px;}
 .section-label::after{content:'';flex:1;height:1px;background:rgba(36,81,209,.2);}
@@ -380,6 +382,10 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       <div class="nav-item" onclick="switchPanel('payments',this)">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
         Payments Received
+      </div>
+      <div class="nav-item" onclick="switchPanel('refunds',this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+        Refunds
       </div>
       <div class="nav-section">Danger Zone</div>
       <div class="nav-item" onclick="switchPanel('delete',this)">
@@ -779,6 +785,23 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
       </div>
 
       <!-- PROFILE -->
+      <div class="panel" id="panel-refunds">
+        <div class="card card-accent">
+          <div class="card-title">Refund Requests</div>
+          <div class="card-sub">Payments on sessions that delivered no power. Send the refund from your own wallet, then record it here. We check it on-chain before marking it refunded.</div>
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+            <select id="refund-filter" onchange="renderRefunds()" style="width:190px;padding:9px 12px;font-size:13px;">
+              <option value="open">Needs action</option>
+              <option value="refunded">Refunded</option>
+              <option value="declined">Declined</option>
+              <option value="all">All</option>
+            </select>
+            <button class="btn btn-google" style="padding:9px 14px;font-size:13px;" onclick="loadRefunds()">Refresh</button>
+          </div>
+          <div id="refund-list"></div>
+        </div>
+      </div>
+
       <div class="panel" id="panel-profile">
         <div style="max-width:560px;">
           <!-- Profile Header Card -->
@@ -986,7 +1009,7 @@ async function forgotPassword(){
 function doSignOut(){ if(confirm('Are you sure you want to sign out?')) window._a.signOut(window._a.auth); }
 
 // ===== NAVIGATION =====
-const panelTitles = {dashboard:'Dashboard',mydevices:'My Devices',register:'Register Device',prices:'Manage Prices',lookup:'Device Lookup',delete:'Delete Device',profile:'My Profile',payments:'Payments Received'};
+const panelTitles = {refunds:'Refunds',dashboard:'Dashboard',mydevices:'My Devices',register:'Register Device',prices:'Manage Prices',lookup:'Device Lookup',delete:'Delete Device',profile:'My Profile',payments:'Payments Received'};
 function switchPanel(panel, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -994,9 +1017,144 @@ function switchPanel(panel, el) {
   document.getElementById('panel-'+panel).classList.add('active');
   document.getElementById('topbar-title').textContent = panelTitles[panel] || panel;
   if(panel === 'payments') loadPayments(1);
+  if(panel === 'refunds') loadRefunds();
   if(panel === 'profile') loadProfile();
   if(panel === 'dashboard') checkNetworkStatus();
 }
+
+// ===== REFUNDS =====
+// Comments, notes and device names come from other people, so everything goes through esc().
+// Rows carry only the txHash; actions look the record up again from refundState.
+const refundState = { all: [] };
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function refundExplorerUrl(chain, hash) {
+  return (chain === 'base' ? 'https://basescan.org/tx/' : 'https://solscan.io/tx/') + encodeURIComponent(hash);
+}
+function shortHash(hash) {
+  const h = String(hash ?? '');
+  return h.length > 14 ? h.slice(0, 6) + '…' + h.slice(-6) : h;
+}
+function refundReason(reason) {
+  return ({ no_on_confirmation: 'The outlet did not turn on', force_off_before_power: 'Turned off before power started' })[reason] || 'Session not delivered';
+}
+function refundStatus(status) {
+  return ({ pending: 'Not requested yet', requested: 'Requested', refunded: 'Refunded', declined: 'Declined' })[status] || status;
+}
+function refundRowHtml(r) {
+  const open = r.status === 'pending' || r.status === 'requested';
+  const color = { requested: '#fbbf24', refunded: '#22c55e', declined: '#9ca3af' }[r.status] || '#60a5fa';
+  const usd = typeof r.amountUsd === 'number' ? ` ($${r.amountUsd.toFixed(2)})` : '';
+  const when = r.failedAt ? new Date(r.failedAt).toLocaleString() : '';
+  const line = (label, html) => `<div style="display:flex;gap:10px;font-size:13px;margin-bottom:6px;"><span style="width:90px;flex-shrink:0;color:var(--text-muted);">${label}</span><span style="min-width:0;overflow-wrap:anywhere;">${html}</span></div>`;
+  return `<div class="refund-row" data-tx="${esc(r.txHash)}" style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;">
+      <strong>${esc(r.deviceName)}</strong>
+      <span style="font-size:12px;font-weight:600;color:${color};">${esc(refundStatus(r.status))}</span>
+    </div>
+    ${line('Amount', `${esc(r.amountUi)} ${esc(r.tokenType)}${esc(usd)}`)}
+    ${line('When', esc(when))}
+    ${line('Reason', esc(refundReason(r.reason)))}
+    ${line('Payer', `${esc(r.payerWallet)} <a href="#" data-action="copy" data-copy="${esc(r.payerWallet)}">Copy</a>`)}
+    ${line('Payment', `<a href="${esc(refundExplorerUrl(r.chain, r.txHash))}" target="_blank" rel="noopener noreferrer">${esc(shortHash(r.txHash))}</a>`)}
+    ${r.comment ? line('Comment', esc(r.comment)) : ''}
+    ${r.note ? line('Your note', esc(r.note)) : ''}
+    ${r.refundTxHash ? line('Refund', `<a href="${esc(refundExplorerUrl(r.chain, r.refundTxHash))}" target="_blank" rel="noopener noreferrer">${esc(shortHash(r.refundTxHash))}</a>`) : ''}
+    ${open ? `<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+      <button class="btn btn-blue" style="padding:8px 14px;font-size:13px;" data-action="show-refund">Mark refunded</button>
+      <button class="btn btn-google" style="padding:8px 14px;font-size:13px;" data-action="show-decline">Decline</button>
+    </div>
+    <div class="refund-form" hidden style="margin-top:12px;">
+      <input class="refund-input" maxlength="500" style="width:100%;padding:9px 12px;font-size:13px;margin-bottom:8px;">
+      <div class="refund-error" style="display:none;color:var(--red);font-size:12px;margin-bottom:8px;"></div>
+      <button class="btn btn-blue refund-confirm" style="padding:8px 14px;font-size:13px;" data-action="confirm"></button>
+    </div>` : ''}
+  </div>`;
+}
+function refundMatches(r, filter) {
+  if (filter === 'all') return true;
+  if (filter === 'open') return r.status === 'pending' || r.status === 'requested';
+  return r.status === filter;
+}
+function renderRefunds() {
+  const list = document.getElementById('refund-list');
+  const filter = document.getElementById('refund-filter').value;
+  const rows = refundState.all.filter((r) => refundMatches(r, filter));
+  list.innerHTML = rows.length
+    ? rows.map(refundRowHtml).join('')
+    : '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">Nothing here.</div>';
+}
+async function loadRefunds() {
+  const list = document.getElementById('refund-list');
+  list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">Loading…</div>';
+  try {
+    const res = await fetch(`${API}/operator/refunds`, { headers: await window._authHeaders() });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Could not load refunds');
+    refundState.all = data.requests;
+    renderRefunds();
+  } catch (err) {
+    list.innerHTML = '';
+    const box = document.createElement('div');
+    box.style.cssText = 'text-align:center;padding:32px;color:var(--red);font-size:13px;';
+    box.textContent = err.message;
+    list.appendChild(box);
+  }
+}
+async function submitRefundAction(row) {
+  const form = row.querySelector('.refund-form');
+  const input = row.querySelector('.refund-input');
+  const error = row.querySelector('.refund-error');
+  const button = row.querySelector('.refund-confirm');
+  const value = input.value.trim();
+  const action = form.dataset.mode;
+  error.style.display = 'none';
+  if (!value) {
+    error.textContent = action === 'refunded' ? 'Paste the refund transaction hash.' : 'Add a short note for the customer.';
+    error.style.display = 'block';
+    return;
+  }
+  button.disabled = true;
+  button.textContent = action === 'refunded' ? 'Checking on-chain…' : 'Saving…';
+  try {
+    const body = action === 'refunded' ? { action, refundTxHash: value } : { action, note: value };
+    const res = await fetch(`${API}/operator/refunds/${encodeURIComponent(row.dataset.tx)}/resolve`, { method: 'POST', headers: await window._authHeaders(), body: JSON.stringify(body) });
+    const data = await res.json();
+    if (data.request) refundState.all = refundState.all.map((r) => (r.txHash === data.request.txHash ? data.request : r));
+    if (!res.ok) throw new Error(data.error || 'Could not save');
+    toast(action === 'refunded' ? 'Refund verified and recorded' : 'Request declined', 'success');
+    renderRefunds();
+  } catch (err) {
+    error.textContent = err.message;
+    error.style.display = 'block';
+    button.disabled = false;
+    button.textContent = action === 'refunded' ? 'Verify and mark refunded' : 'Decline request';
+  }
+}
+document.addEventListener('click', (e) => {
+  const target = e.target.closest('#refund-list [data-action]');
+  if (!target) return;
+  e.preventDefault();
+  const row = target.closest('.refund-row');
+  const form = row.querySelector('.refund-form');
+  const action = target.dataset.action;
+  if (action === 'copy') {
+    navigator.clipboard.writeText(target.dataset.copy).then(() => toast('Wallet copied', 'success'));
+  } else if (action === 'confirm') {
+    submitRefundAction(row);
+  } else {
+    const refunding = action === 'show-refund';
+    form.dataset.mode = refunding ? 'refunded' : 'declined';
+    form.hidden = false;
+    const input = row.querySelector('.refund-input');
+    input.value = '';
+    input.placeholder = refunding ? 'Refund transaction hash' : 'Note for the customer';
+    row.querySelector('.refund-confirm').textContent = refunding ? 'Verify and mark refunded' : 'Decline request';
+    row.querySelector('.refund-error').style.display = 'none';
+    input.focus();
+  }
+});
 
 // ===== MY DEVICES (localStorage) =====
 function getMyDevices() {
