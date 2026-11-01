@@ -627,6 +627,8 @@ body.light-mode .nav-item.active .nav-icon{color:var(--blue);}
               </label>
               <div class="fg"><label>Max session length (minutes, optional)</label><input type="number" id="mgr-maxCap" min="1" step="1" placeholder="Leave blank for no limit"></div>
               <div style="font-size:12px;color:var(--text-muted);margin:-6px 0 12px;">Caps how much time a user can stack by adding tiers.</div>
+              <div class="fg"><label>Max power interruption before auto-refund (minutes)</label><input type="number" id="mgr-maxInterruption" min="1" max="60" step="1" value="10"></div>
+              <div style="font-size:12px;color:var(--text-muted);margin:-6px 0 12px;">If the outlet loses power or Wi-Fi mid-session, the customer's time is frozen. After this long, the session ends and unused time is refunded.</div>
               <button class="app-btn app-btn-primary" style="margin-bottom:8px;" onclick="saveOutletSettings()" id="mgr-outlet-btn">Save Outlet Settings</button>
               <div class="alert" id="mgr-outlet-alert" style="margin-bottom:16px;"></div>
             </div>
@@ -1037,7 +1039,7 @@ function shortHash(hash) {
   return h.length > 14 ? h.slice(0, 6) + '…' + h.slice(-6) : h;
 }
 function refundReason(reason) {
-  return ({ no_on_confirmation: 'The outlet did not turn on', force_off_before_power: 'Turned off before power started' })[reason] || 'Session not delivered';
+  return ({ no_on_confirmation: 'The outlet did not turn on', force_off_before_power: 'Turned off before power started', plug_offline: 'Power interrupted, unused time only' })[reason] || 'Session not delivered';
 }
 function refundStatus(status) {
   return ({ pending: 'Not requested yet', requested: 'Requested', refunded: 'Refunded', declined: 'Declined' })[status] || status;
@@ -1054,6 +1056,7 @@ function refundRowHtml(r) {
       <span style="font-size:12px;font-weight:600;color:${color};">${esc(refundStatus(r.status))}</span>
     </div>
     ${line('Amount', `${esc(r.amountUi)} ${esc(r.tokenType)}${esc(usd)}`)}
+    ${r.paidAmountUi ? line('Paid', `${esc(r.paidAmountUi)} ${esc(r.tokenType)}, ${esc(Math.round((r.unusedSeconds || 0) / 60))} of ${esc(Math.round((r.grantedSeconds || 0) / 60))} min unused`) : ''}
     ${line('When', esc(when))}
     ${line('Reason', esc(refundReason(r.reason)))}
     ${line('Payer', `${esc(r.payerWallet)} <a href="#" data-action="copy" data-copy="${esc(r.payerWallet)}">Copy</a>`)}
@@ -1470,6 +1473,7 @@ async function loadPrices(){
       document.getElementById('mgr-pauseAllowed').checked=!!(cfg.pause&&cfg.pause.allowed);
       const cap=Number(cfg.operatorMaxCapSeconds)||0;
       document.getElementById('mgr-maxCap').value=cap>0?String(Math.round(cap/60)):'';
+      document.getElementById('mgr-maxInterruption').value=String(Math.round((Number(cfg.maxInterruptionSeconds)||600)/60));
     }
     // QR code
     const mgrQRData=buildQRData(data.deviceId,data.deviceName,data.deviceType,data.model||'',data.firmwareVersion||'1.0.0',data.solanaWalletAddress||'',data.baseWalletAddress||'');
@@ -1520,7 +1524,7 @@ async function saveWallets(){
 }
 
 // Power Outlet settings → PUT /api/device-prices/:id/settings { config }
-// Backend validates strictly: pause.allowed (bool), operatorMaxCapSeconds (positive int).
+// Backend validates strictly: pause.allowed (bool), operatorMaxCapSeconds (positive int), maxInterruptionSeconds (positive int, clamped to 60-3600).
 // The app reads these back via /power-session (pauseAllowed, maxCapSeconds).
 async function saveOutletSettings(){
   const deviceId=document.getElementById('mgr-deviceId').value.trim().toUpperCase();
@@ -1529,7 +1533,9 @@ async function saveOutletSettings(){
   if(!deviceSecret) return showAlert('mgr-outlet-alert','error','Device Secret Key is required to save changes.');
   const allowed=document.getElementById('mgr-pauseAllowed').checked;
   const capRaw=document.getElementById('mgr-maxCap').value.trim();
-  const config={pause:{allowed}};
+  const interruptionMin=Number(document.getElementById('mgr-maxInterruption').value.trim());
+  if(!Number.isInteger(interruptionMin)||interruptionMin<1||interruptionMin>60) return showAlert('mgr-outlet-alert','error','Max power interruption must be a whole number of minutes from 1 to 60.');
+  const config={pause:{allowed},maxInterruptionSeconds:interruptionMin*60};
   if(capRaw!==''){
     const capMin=Number(capRaw);
     if(!Number.isInteger(capMin)||capMin<1) return showAlert('mgr-outlet-alert','error','Max session length must be a whole number of minutes (1 or more), or blank.');
@@ -1543,7 +1549,9 @@ async function saveOutletSettings(){
     document.getElementById('mgr-pauseAllowed').checked=!!(saved.pause&&saved.pause.allowed);
     const cap=Number(saved.operatorMaxCapSeconds)||0;
     document.getElementById('mgr-maxCap').value=cap>0?String(Math.round(cap/60)):'';
-    const msg=`Pause ${allowed?'enabled':'disabled'}${cap>0?`, max session ${Math.round(cap/60)} min`:''}.`;
+    const interruption=Math.round((Number(saved.maxInterruptionSeconds)||interruptionMin*60)/60);
+    document.getElementById('mgr-maxInterruption').value=String(interruption);
+    const msg=`Pause ${allowed?'enabled':'disabled'}${cap>0?`, max session ${Math.round(cap/60)} min`:''}, power interruption window ${interruption} min.`;
     toast('Outlet settings saved!', 'success');
     showAlert('mgr-outlet-alert','success',msg+' Users will see this in the app on their next session.');
   } catch(e){ showAlert('mgr-outlet-alert','error',e.message); toast(e.message,'error'); }
